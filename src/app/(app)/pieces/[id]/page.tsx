@@ -42,7 +42,17 @@ export default async function PieceDetail({ params }: { params: { id: string } }
           <h1 className="mt-1 text-2xl font-semibold tracking-tight">{piece.type}</h1>
           <p className="text-sm text-neutral-500 font-mono">{piece.sku}</p>
         </div>
-        <StatusBadge status={piece.status} />
+        <div className="flex flex-col items-end gap-2">
+          <StatusBadge status={piece.status} />
+          {profile.role !== "staff" && (
+            <Link
+              href={`/pieces/${piece.id}/edit`}
+              className="text-xs px-2 py-1 rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400"
+            >
+              Edit
+            </Link>
+          )}
+        </div>
       </header>
 
       <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
