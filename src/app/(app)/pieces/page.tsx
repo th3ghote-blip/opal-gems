@@ -62,14 +62,24 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
     <div className="space-y-4">
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Pieces</h1>
-        {profile.role !== "staff" && (
-          <Link
-            href="/pieces/new"
-            className="text-sm px-3 py-1.5 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950"
-          >
-            + New piece
-          </Link>
-        )}
+        <div className="flex gap-2">
+          {profile.role === "owner" && (
+            <Link
+              href="/pieces/import"
+              className="text-sm px-3 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-700"
+            >
+              Import
+            </Link>
+          )}
+          {profile.role !== "staff" && (
+            <Link
+              href="/pieces/new"
+              className="text-sm px-3 py-1.5 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950"
+            >
+              + New piece
+            </Link>
+          )}
+        </div>
       </header>
 
       <form className="flex flex-wrap gap-2 items-center" method="get">
