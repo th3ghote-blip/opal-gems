@@ -23,20 +23,58 @@ interface SearchParams {
   ctw_max?: string;
 }
 
+// Build a URL that preserves all current filters but swaps the sort key.
+// Clicking an already-active asc column → desc; desc → asc; inactive → asc.
+function sortHref(sp: SearchParams, ascKey: string, descKey: string): string {
+  const cur = sp.sort ?? "newest";
+  const next = cur === ascKey ? descKey : ascKey;
+  const p = new URLSearchParams();
+  if (sp.q)         p.set("q",         sp.q);
+  if (sp.shop)      p.set("shop",      sp.shop);
+  if (sp.type)      p.set("type",      sp.type);
+  if (sp.status)    p.set("status",    sp.status);
+  if (sp.view)      p.set("view",      sp.view);
+  if (sp.metal)     p.set("metal",     sp.metal);
+  if (sp.karat)     p.set("karat",     sp.karat);
+  if (sp.price_min) p.set("price_min", sp.price_min);
+  if (sp.price_max) p.set("price_max", sp.price_max);
+  if (sp.ctw_min)   p.set("ctw_min",   sp.ctw_min);
+  if (sp.ctw_max)   p.set("ctw_max",   sp.ctw_max);
+  p.set("sort", next);
+  return `/pieces?${p.toString()}`;
+}
+
+function SortArrow({ sp, ascKey, descKey }: { sp: SearchParams; ascKey: string; descKey: string }) {
+  const cur = sp.sort ?? "newest";
+  if (cur === ascKey)  return <span className="ml-0.5 text-gold-600 dark:text-gold-400">↑</span>;
+  if (cur === descKey) return <span className="ml-0.5 text-gold-600 dark:text-gold-400">↓</span>;
+  return <span className="ml-0.5 opacity-25 group-hover:opacity-60">⇅</span>;
+}
+
 export default async function PiecesPage({ searchParams }: { searchParams: SearchParams }) {
   const profile = (await getCurrentProfile())!;
   const supabase = createClient();
 
   // Build sort
   const sortMap: Record<string, { col: string; asc: boolean }> = {
-    newest:     { col: "created_at", asc: false },
-    oldest:     { col: "created_at", asc: true },
-    sku_asc:    { col: "sku",        asc: true },
-    sku_desc:   { col: "sku",        asc: false },
-    price_asc:  { col: "sale_price", asc: true },
-    price_desc: { col: "sale_price", asc: false },
-    type_asc:   { col: "type",       asc: true },
-    status:     { col: "status",     asc: true },
+    newest:      { col: "created_at",  asc: false },
+    oldest:      { col: "created_at",  asc: true  },
+    sku_asc:     { col: "sku",         asc: true  },
+    sku_desc:    { col: "sku",         asc: false },
+    desc_asc:    { col: "description", asc: true  },
+    desc_desc:   { col: "description", asc: false },
+    type_asc:    { col: "type",        asc: true  },
+    type_desc:   { col: "type",        asc: false },
+    metal_asc:   { col: "metal",       asc: true  },
+    metal_desc:  { col: "metal",       asc: false },
+    ctw_asc:     { col: "ctw",         asc: true  },
+    ctw_desc:    { col: "ctw",         asc: false },
+    price_asc:   { col: "sale_price",  asc: true  },
+    price_desc:  { col: "sale_price",  asc: false },
+    status_asc:  { col: "status",      asc: true  },
+    status_desc: { col: "status",      asc: false },
+    // legacy alias
+    status:      { col: "status",      asc: true  },
   };
   const { col, asc } = sortMap[searchParams.sort ?? ""] ?? sortMap.newest;
 
@@ -136,16 +174,44 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
       {isList && pieces && pieces.length > 0 && (
         <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-xs text-neutral-500 bg-neutral-50 dark:bg-neutral-900 sticky top-0">
+            <thead className="text-xs text-neutral-500 bg-neutral-50 dark:bg-neutral-900 sticky top-0 border-b border-neutral-200 dark:border-neutral-800">
               <tr>
-                <th className="text-left px-3 py-2 font-medium">SKU</th>
-                <th className="text-left px-3 py-2 font-medium">Name / Description</th>
-                <th className="text-left px-3 py-2 font-medium">Type</th>
-                <th className="text-left px-3 py-2 font-medium">Metal</th>
-                <th className="text-right px-3 py-2 font-medium">CTW</th>
-                <th className="text-right px-3 py-2 font-medium">Price</th>
+                <th className="text-left px-3 py-2">
+                  <Link href={sortHref(searchParams, "sku_asc", "sku_desc")} className="group inline-flex items-center font-medium hover:text-neutral-900 dark:hover:text-neutral-100 whitespace-nowrap">
+                    SKU <SortArrow sp={searchParams} ascKey="sku_asc" descKey="sku_desc" />
+                  </Link>
+                </th>
+                <th className="text-left px-3 py-2">
+                  <Link href={sortHref(searchParams, "desc_asc", "desc_desc")} className="group inline-flex items-center font-medium hover:text-neutral-900 dark:hover:text-neutral-100 whitespace-nowrap">
+                    Name / Description <SortArrow sp={searchParams} ascKey="desc_asc" descKey="desc_desc" />
+                  </Link>
+                </th>
+                <th className="text-left px-3 py-2">
+                  <Link href={sortHref(searchParams, "type_asc", "type_desc")} className="group inline-flex items-center font-medium hover:text-neutral-900 dark:hover:text-neutral-100 whitespace-nowrap">
+                    Type <SortArrow sp={searchParams} ascKey="type_asc" descKey="type_desc" />
+                  </Link>
+                </th>
+                <th className="text-left px-3 py-2">
+                  <Link href={sortHref(searchParams, "metal_asc", "metal_desc")} className="group inline-flex items-center font-medium hover:text-neutral-900 dark:hover:text-neutral-100 whitespace-nowrap">
+                    Metal <SortArrow sp={searchParams} ascKey="metal_asc" descKey="metal_desc" />
+                  </Link>
+                </th>
+                <th className="text-right px-3 py-2">
+                  <Link href={sortHref(searchParams, "ctw_asc", "ctw_desc")} className="group inline-flex items-center justify-end font-medium hover:text-neutral-900 dark:hover:text-neutral-100 whitespace-nowrap">
+                    CTW <SortArrow sp={searchParams} ascKey="ctw_asc" descKey="ctw_desc" />
+                  </Link>
+                </th>
+                <th className="text-right px-3 py-2">
+                  <Link href={sortHref(searchParams, "price_asc", "price_desc")} className="group inline-flex items-center justify-end font-medium hover:text-neutral-900 dark:hover:text-neutral-100 whitespace-nowrap">
+                    Price <SortArrow sp={searchParams} ascKey="price_asc" descKey="price_desc" />
+                  </Link>
+                </th>
                 <th className="text-left px-3 py-2 font-medium">Shop</th>
-                <th className="text-left px-3 py-2 font-medium">Status</th>
+                <th className="text-left px-3 py-2">
+                  <Link href={sortHref(searchParams, "status_asc", "status_desc")} className="group inline-flex items-center font-medium hover:text-neutral-900 dark:hover:text-neutral-100 whitespace-nowrap">
+                    Status <SortArrow sp={searchParams} ascKey="status_asc" descKey="status_desc" />
+                  </Link>
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
