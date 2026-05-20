@@ -43,14 +43,24 @@ export default async function PieceDetail({ params }: { params: { id: string } }
         </div>
         <div className="flex flex-col items-end gap-2">
           <StatusBadge status={piece.status} />
-          {profile.role !== "staff" && (
-            <Link
-              href={`/pieces/${piece.id}/edit`}
-              className="text-xs px-2 py-1 rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400"
-            >
-              Edit
-            </Link>
-          )}
+          <div className="flex gap-1.5">
+            {piece.status === "in_stock" && (
+              <Link
+                href={`/pieces/${piece.id}/sell`}
+                className="text-xs px-3 py-1 rounded bg-emerald-600 text-white font-medium"
+              >
+                Sell
+              </Link>
+            )}
+            {profile.role !== "staff" && (
+              <Link
+                href={`/pieces/${piece.id}/edit`}
+                className="text-xs px-2 py-1 rounded border border-neutral-300 dark:border-neutral-700 text-neutral-600 dark:text-neutral-400"
+              >
+                Edit
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 
