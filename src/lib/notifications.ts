@@ -202,10 +202,9 @@ async function sendEmail<K extends TemplateKey>(
 ): Promise<{ sent: boolean; reason?: string }> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM ?? "Opal Gems <onboarding@resend.dev>";
-  // Recipients: every active owner in DB, plus OWNER_EMAIL env if set (dedup).
-  const owners = await getActiveOwnerEmails();
-  const envEmail = process.env.OWNER_EMAIL?.trim();
-  const recipients = Array.from(new Set([...owners, ...(envEmail ? [envEmail] : [])])).filter(Boolean);
+  // Recipients: every active owner in the profiles table. Untick "active" in
+  // Settings → Staff to stop someone's emails. No env-var override.
+  const recipients = (await getActiveOwnerEmails()).filter(Boolean);
 
   if (!apiKey || recipients.length === 0) {
     const body = plainBody(key, payload);
