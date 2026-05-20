@@ -31,22 +31,37 @@ export function parseCSV(text: string): string[][] {
   return rows;
 }
 
-/** Parse a price string into a float. Handles US ($1,750.00), European ($1.750,00), bare ints. */
+/** Parse a price string into a float. Handles:
+ *   US:       "$1,400"      "$1,750.00"    "$875.00"
+ *   European: "$1.400"      "$1.750,00"    "$875,00"
+ *   Bare:     "1400"        "1500"
+ * Heuristic: if both . and , present, the last one is the decimal mark.
+ * If only one separator present, 3-digit trail = thousands, 1–2 digit trail = decimal. */
 export function parsePrice(raw: string): number | null {
   if (!raw) return null;
   const cleaned = raw.replace(/[^\d.,-]/g, "");
   if (!cleaned) return null;
-  const lastDot = cleaned.lastIndexOf(".");
-  const lastComma = cleaned.lastIndexOf(",");
-  let result: number;
-  if (lastDot > lastComma) {
-    result = parseFloat(cleaned.replace(/,/g, ""));
-  } else if (lastComma > lastDot) {
-    result = parseFloat(cleaned.replace(/\./g, "").replace(",", "."));
+  const dotIdx = cleaned.lastIndexOf(".");
+  const commaIdx = cleaned.lastIndexOf(",");
+  let normalized: string;
+  if (dotIdx === -1 && commaIdx === -1) {
+    normalized = cleaned;
+  } else if (dotIdx >= 0 && commaIdx >= 0) {
+    // Last separator is the decimal
+    if (dotIdx > commaIdx) {
+      normalized = cleaned.replace(/,/g, "");
+    } else {
+      normalized = cleaned.replace(/\./g, "").replace(",", ".");
+    }
+  } else if (dotIdx >= 0) {
+    const after = cleaned.length - dotIdx - 1;
+    normalized = after === 3 ? cleaned.replace(/\./g, "") : cleaned;
   } else {
-    result = parseFloat(cleaned);
+    const after = cleaned.length - commaIdx - 1;
+    normalized = after === 3 ? cleaned.replace(/,/g, "") : cleaned.replace(",", ".");
   }
-  return Number.isFinite(result) ? result : null;
+  const n = parseFloat(normalized);
+  return Number.isFinite(n) ? n : null;
 }
 
 /** Parse CTW — accept "1.5", "01.02", "1.9 CTW", "" */
