@@ -3,14 +3,14 @@
 @tailwind utilities;
 
 :root {
-  --background: #FAF7F2;       /* warm ivory */
-  --foreground: #0C0A09;       /* obsidian */
+  --background: #F2EDE2;       /* deep parchment */
+  --foreground: #110E0B;       /* obsidian */
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0C0A09;     /* obsidian */
-    --foreground: #F5EFE3;     /* champagne white */
+    --background: #080605;     /* deep obsidian */
+    --foreground: #EDE5D1;     /* warm champagne white */
   }
 }
 
