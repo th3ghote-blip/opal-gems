@@ -39,7 +39,7 @@ export default async function StockCountsPage() {
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold tracking-tight">Stock counts</h1>
         {profile.role !== "staff" && (
-          <Link href="/stock-counts/new" className="text-sm px-3 py-1.5 rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900">
+          <Link href="/stock-counts/new" className="text-sm px-3 py-1.5 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950">
             + Start count
           </Link>
         )}

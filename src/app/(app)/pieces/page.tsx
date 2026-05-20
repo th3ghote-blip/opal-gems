@@ -65,7 +65,7 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
         {profile.role !== "staff" && (
           <Link
             href="/pieces/new"
-            className="text-sm px-3 py-1.5 rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
+            className="text-sm px-3 py-1.5 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950"
           >
             + New piece
           </Link>

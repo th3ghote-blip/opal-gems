@@ -98,7 +98,7 @@ export function NewMovementForm({ pieces, shops, defaultFromShopId }: { pieces: 
         <button
           type="submit"
           disabled={pending || !pieceId}
-          className="px-4 py-2 rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium disabled:opacity-50"
+          className="px-4 py-2 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950 text-sm font-medium disabled:opacity-50"
         >
           {pending ? "Submitting…" : "Submit for approval"}
         </button>

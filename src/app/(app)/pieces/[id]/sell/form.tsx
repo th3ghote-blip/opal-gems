@@ -178,7 +178,7 @@ export function SellForm({
                 <input type="checkbox" name="consent" /> Customer consents to marketing follow-up
               </label>
               <div className="sm:col-span-2 flex gap-2">
-                <button type="submit" className="px-3 py-1.5 rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm">Save customer</button>
+                <button type="submit" className="px-3 py-1.5 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950 text-sm">Save customer</button>
                 <button type="button" onClick={() => setShowQuickAdd(false)} className="px-3 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 text-sm">Cancel</button>
               </div>
             </form>
@@ -280,7 +280,7 @@ export function SellForm({
         <button
           type="submit"
           disabled={pending}
-          className="px-4 py-2 rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-medium disabled:opacity-50"
+          className="px-4 py-2 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950 text-sm font-medium disabled:opacity-50"
         >
           {pending ? "Recording…" : overThreshold && !isOwner ? "Request approval" : "Record sale"}
         </button>

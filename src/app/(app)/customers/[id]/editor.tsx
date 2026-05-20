@@ -61,7 +61,7 @@ export function CustomerEditor({ initial, canEdit }: { initial: Customer; canEdi
           Marketing consent
         </label>
         <div className="sm:col-span-2 flex gap-2">
-          <button type="submit" disabled={pending} className="px-3 py-1.5 rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm disabled:opacity-50">
+          <button type="submit" disabled={pending} className="px-3 py-1.5 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950 text-sm disabled:opacity-50">
             {pending ? "Saving…" : "Save"}
           </button>
           <button type="button" onClick={() => setEditing(false)} className="px-3 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 text-sm">Cancel</button>

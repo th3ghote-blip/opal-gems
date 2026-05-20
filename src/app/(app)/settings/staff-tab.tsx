@@ -157,7 +157,7 @@ function InviteForm({ shops, onDone }: { shops: Shop[]; onDone: () => void }) {
           ))}
         </select>
         <div className="sm:col-span-2 flex items-center gap-3">
-          <button type="submit" disabled={pending} className="px-3 py-1.5 rounded-md bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-sm disabled:opacity-50">
+          <button type="submit" disabled={pending} className="px-3 py-1.5 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950 text-sm disabled:opacity-50">
             {pending ? "Adding…" : "Add staff"}
           </button>
           {err && <span className="text-sm text-red-600">{err}</span>}
