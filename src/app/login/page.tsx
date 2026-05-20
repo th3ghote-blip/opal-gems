@@ -30,7 +30,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-dvh grid place-items-center px-6">
       <div className="w-full max-w-sm">
-        <h1 className="text-3xl font-semibold tracking-tight">Opal Gems</h1>
+        <h1 className="text-3xl font-semibold tracking-tight text-gold-600 dark:text-gold-300">Opal Gems</h1>
         <p className="mt-1 text-sm text-neutral-500">Sign in to continue</p>
 
         {status === "sent" ? (

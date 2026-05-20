@@ -35,7 +35,7 @@ export function NavBar({ role, fullName }: Props) {
       {/* Top header — desktop + mobile */}
       <header className="sticky top-0 z-30 bg-white/80 dark:bg-neutral-950/80 backdrop-blur border-b border-neutral-200 dark:border-neutral-800">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-4 h-14">
-          <Link href="/dashboard" className="font-semibold tracking-tight">Opal Gems</Link>
+          <Link href="/dashboard" className="font-semibold tracking-tight text-gold-600 dark:text-gold-300">Opal Gems</Link>
           <nav className="hidden md:flex gap-1">
             {items.map((i) => {
               const active = pathname?.startsWith(i.href);
