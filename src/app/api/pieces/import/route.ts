@@ -111,7 +111,7 @@ export async function POST(req: NextRequest) {
       original_price: r.price ?? 0,
       sale_price: r.price ?? 0,
       current_shop_id: r.resolved_shop_id,
-      status: "in_stock" as const,
+      status: (r.status_override ?? "in_stock") as "in_stock" | "sold",
       created_by: profile.id,
     }));
 

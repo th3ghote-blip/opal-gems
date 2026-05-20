@@ -139,6 +139,8 @@ export interface ParsedRow {
   raw: Record<string, string>;
   issues: string[];
   status: "ok" | "skip" | "error";
+  /** When set, the piece is inserted with this status instead of "in_stock". */
+  status_override?: "sold" | null;
 }
 
 function isHeaderFormatA(row: string[]): boolean {
@@ -182,10 +184,11 @@ function parseFormatA(rows: string[][], headerIdx: number): ParsedRow[] {
     if (parsedPrice == null || parsedPrice <= 0) issues.push("invalid price");
 
     let status: ParsedRow["status"] = "ok";
+    let status_override: "sold" | null = null;
     if (issues.length > 0) status = "error";
     else if (Number.isFinite(parsedTotal) && parsedTotal === 0) {
-      status = "skip";
-      issues.push("not in stock (TOTAL=0)");
+      status_override = "sold";
+      issues.push("imported as sold (TOTAL=0)");
     }
 
     out.push({
@@ -200,6 +203,7 @@ function parseFormatA(rows: string[][], headerIdx: number): ParsedRow[] {
       raw: { sku, name, category, ctw, price, certification, stock, total },
       issues,
       status,
+      status_override,
     });
   }
   return out;
@@ -245,8 +249,9 @@ function parseFormatB(rows: string[][], headerIdx: number): ParsedRow[] {
     const type = extractTypeFromName(name) ?? "";
     const issues: string[] = [];
     let status: ParsedRow["status"] = "ok";
+    let status_override: "sold" | null = null;
 
-    if (soldBy) { status = "skip"; issues.push("already sold"); }
+    if (soldBy) { status_override = "sold"; issues.push(`imported as sold (by ${soldBy})`); }
     if (!sku) { status = "error"; issues.push("missing SKU"); }
     if (!name) { status = "error"; issues.push("missing name"); }
     if (!type) { status = "error"; issues.push("could not infer type from name"); }
@@ -271,6 +276,7 @@ function parseFormatB(rows: string[][], headerIdx: number): ParsedRow[] {
       raw: Object.fromEntries(header.map((h, j) => [h, r[j] ?? ""])),
       issues,
       status,
+      status_override,
     });
   }
   return out;

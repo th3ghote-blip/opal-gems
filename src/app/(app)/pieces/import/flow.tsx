@@ -21,6 +21,7 @@ interface PreviewRow {
   location?: string | null;
   resolved_shop_name?: string | null;
   status: "ok" | "skip" | "error";
+  status_override?: "sold" | null;
   issues: string[];
 }
 
@@ -177,7 +178,12 @@ export function ImportFlow({ shops, defaultShopId }: { shops: Shop[]; defaultSho
                   <td className="px-3 py-2 text-right tabular-nums">{r.price ? `$${r.price.toLocaleString("en-US")}` : "—"}</td>
                   <td className="px-3 py-2 text-xs">{r.resolved_shop_name ?? r.location ?? "—"}</td>
                   <td className="px-3 py-2">
-                    {r.status === "ok"   && <span className="text-emerald-700 dark:text-emerald-400 text-xs">✓ ok</span>}
+                    {r.status === "ok" && r.status_override === "sold" && (
+                      <span className="text-plum-600 dark:text-plum-300 text-xs">✓ → sold</span>
+                    )}
+                    {r.status === "ok" && !r.status_override && (
+                      <span className="text-emerald-700 dark:text-emerald-400 text-xs">✓ in stock</span>
+                    )}
                     {r.status === "skip" && <span className="text-amber-700 dark:text-amber-400 text-xs">⊘ {r.issues.join(", ")}</span>}
                     {r.status === "error" && <span className="text-red-700 dark:text-red-400 text-xs">✗ {r.issues.join(", ")}</span>}
                   </td>
