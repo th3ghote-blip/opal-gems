@@ -15,6 +15,12 @@ interface SearchParams {
   status?: string;
   sort?: string;
   view?: string;
+  metal?: string;
+  karat?: string;
+  price_min?: string;
+  price_max?: string;
+  ctw_min?: string;
+  ctw_max?: string;
 }
 
 export default async function PiecesPage({ searchParams }: { searchParams: SearchParams }) {
@@ -42,12 +48,17 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
     .limit(250);
 
   if (searchParams.q) {
-    // Search SKU or description
     query = query.or(`sku.ilike.%${searchParams.q}%,description.ilike.%${searchParams.q}%`);
   }
-  if (searchParams.shop) query = query.eq("current_shop_id", searchParams.shop);
-  if (searchParams.type) query = query.eq("type", searchParams.type);
-  if (searchParams.status) query = query.eq("status", searchParams.status);
+  if (searchParams.shop)      query = query.eq("current_shop_id", searchParams.shop);
+  if (searchParams.type)      query = query.eq("type", searchParams.type);
+  if (searchParams.status)    query = query.eq("status", searchParams.status);
+  if (searchParams.metal)     query = query.eq("metal", searchParams.metal);
+  if (searchParams.karat)     query = query.eq("karat", searchParams.karat);
+  if (searchParams.price_min) query = query.gte("sale_price", parseFloat(searchParams.price_min));
+  if (searchParams.price_max) query = query.lte("sale_price", parseFloat(searchParams.price_max));
+  if (searchParams.ctw_min)   query = query.gte("ctw", parseFloat(searchParams.ctw_min));
+  if (searchParams.ctw_max)   query = query.lte("ctw", parseFloat(searchParams.ctw_max));
 
   // Run pieces / shops / type-enum queries in parallel.
   const [piecesRes, shopsRes, typesRes] = await Promise.all([
