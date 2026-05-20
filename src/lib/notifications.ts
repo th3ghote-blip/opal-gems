@@ -177,37 +177,60 @@ async function logOutbox(
   }
 }
 
+async function getActiveOwnerEmails(): Promise<string[]> {
+  try {
+    const admin = createAdminClient();
+    const { data: owners } = await admin
+      .from("profiles")
+      .select("id")
+      .eq("role", "owner")
+      .eq("active", true);
+    if (!owners?.length) return [];
+    // auth.users holds the email; fetch in one listUsers and filter.
+    const { data: users } = await admin.auth.admin.listUsers({ perPage: 200 });
+    const ownerIds = new Set(owners.map((o) => o.id));
+    return users.users.filter((u) => ownerIds.has(u.id) && u.email).map((u) => u.email!);
+  } catch (e) {
+    console.error("failed to load owner emails", e);
+    return [];
+  }
+}
+
 async function sendEmail<K extends TemplateKey>(
   key: K,
   payload: Templates[K]
 ): Promise<{ sent: boolean; reason?: string }> {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.RESEND_FROM ?? "Opal Gems <onboarding@resend.dev>";
-  const to = process.env.OWNER_EMAIL?.trim();
-  if (!apiKey || !to) {
+  // Recipients: every active owner in DB, plus OWNER_EMAIL env if set (dedup).
+  const owners = await getActiveOwnerEmails();
+  const envEmail = process.env.OWNER_EMAIL?.trim();
+  const recipients = Array.from(new Set([...owners, ...(envEmail ? [envEmail] : [])])).filter(Boolean);
+
+  if (!apiKey || recipients.length === 0) {
     const body = plainBody(key, payload);
-    console.log(`[notify:${key}] (Resend not configured — printing)\n${body}`);
-    await logOutbox("email", to ?? "(unset)", key, payload as object, "failed", "resend not configured");
+    console.log(`[notify:${key}] (Resend not configured / no owners — printing)\n${body}`);
+    await logOutbox("email", recipients.join(",") || "(unset)", key, payload as object, "failed", "resend not configured");
     return { sent: false, reason: "resend not configured" };
   }
   try {
     const resend = new Resend(apiKey);
     const { error } = await resend.emails.send({
       from,
-      to: [to],
+      to: recipients,
       subject: subject(key, payload),
       text: plainBody(key, payload),
       html: htmlBody(key, payload),
     });
     if (error) {
-      await logOutbox("email", to, key, payload as object, "failed", error.message);
+      await logOutbox("email", recipients.join(","), key, payload as object, "failed", error.message);
       return { sent: false, reason: error.message };
     }
-    await logOutbox("email", to, key, payload as object, "sent");
+    await logOutbox("email", recipients.join(","), key, payload as object, "sent");
     return { sent: true };
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    await logOutbox("email", to, key, payload as object, "failed", msg);
+    await logOutbox("email", recipients.join(","), key, payload as object, "failed", msg);
     return { sent: false, reason: msg };
   }
 }
