@@ -9,7 +9,7 @@ interface TypeOpt { value: string }
 const METALS = ["White Gold", "Yellow Gold", "Rose Gold", "Silver", "Platinum"];
 const KARATS = ["10k", "14k", "18k", "22k"];
 
-export function PiecesFilters({ shops, types }: { shops: Shop[]; types: TypeOpt[] }) {
+export function PiecesFilters({ shops, types, view: viewProp }: { shops: Shop[]; types: TypeOpt[]; view: string }) {
   const router = useRouter();
   const params = useSearchParams();
   const [, start] = useTransition();
@@ -51,9 +51,17 @@ export function PiecesFilters({ shops, types }: { shops: Shop[]; types: TypeOpt[
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q, priceMin, priceMax, ctwMin, ctwMax]);
 
+  // Set cookie so the preference survives navigation (server reads it as fallback)
+  function setView(v: string) {
+    document.cookie = `pieces_view=${v};path=/;max-age=31536000;SameSite=Lax`;
+    pushWith({ view: v });
+  }
+
   const inputCls =
     "rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-2 text-sm";
-  const view = params.get("view") ?? "grid";
+  // Use the server-resolved prop so the button reflects the saved preference
+  // even when the URL doesn't carry the ?view= param
+  const view = viewProp;
   const hasAnyFilter =
     params.get("q") || params.get("shop") || params.get("type") ||
     params.get("status") || hasExtended;
@@ -126,11 +134,11 @@ export function PiecesFilters({ shops, types }: { shops: Shop[]; types: TypeOpt[
         </div>
 
         <div className="flex rounded-md border border-neutral-300 dark:border-neutral-700 overflow-hidden text-sm">
-          <button type="button" onClick={() => pushWith({ view: "grid" })} title="Grid view"
+          <button type="button" onClick={() => setView("grid")} title="Grid view"
             className={`px-3 py-1.5 ${view !== "list" ? "bg-neutral-100 dark:bg-neutral-800 font-medium" : "bg-white dark:bg-neutral-900 text-neutral-500"}`}>
             ⊞
           </button>
-          <button type="button" onClick={() => pushWith({ view: "list" })} title="List view"
+          <button type="button" onClick={() => setView("list")} title="List view"
             className={`px-3 py-1.5 border-l border-neutral-300 dark:border-neutral-700 ${view === "list" ? "bg-neutral-100 dark:bg-neutral-800 font-medium" : "bg-white dark:bg-neutral-900 text-neutral-500"}`}>
             ☰
           </button>

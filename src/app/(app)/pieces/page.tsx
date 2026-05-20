@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 import { createClient, getCurrentProfile } from "@/lib/supabase/server";
 import { PieceCard } from "@/components/PieceCard";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -129,7 +130,10 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
     thumbByPiece[ph.piece_id] = data.publicUrl;
   }
 
-  const isList = searchParams.view === "list";
+  // Resolve view: URL param wins, then cookie, then default to grid
+  const viewCookie = cookies().get("pieces_view")?.value;
+  const effectiveView = searchParams.view ?? viewCookie ?? "grid";
+  const isList = effectiveView === "list";
 
   return (
     <div className="space-y-4">
@@ -160,7 +164,7 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
         </div>
       </header>
 
-      <PiecesFilters shops={shops ?? []} types={types ?? []} />
+      <PiecesFilters shops={shops ?? []} types={types ?? []} view={effectiveView} />
 
       {error && <p className="text-sm text-red-600">{error.message}</p>}
 
