@@ -19,7 +19,7 @@ export default async function ImportPage() {
           Paste a Google Sheets URL or raw CSV. Preview, then commit. Existing SKUs are skipped — re-running is safe.
         </p>
       </header>
-      <ImportFlow shops={shops ?? []} defaultShopId={profile.default_shop_id ?? shops?.[0]?.id ?? ""} />
+      <ImportFlow shops={shops ?? []} defaultShopId={"auto"} />
     </div>
   );
 }

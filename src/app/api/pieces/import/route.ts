@@ -8,12 +8,15 @@ const body = z.object({
   source: z.enum(["url", "csv"]),
   url: z.string().optional(),
   csv: z.string().optional(),
-  shop_id: z.string().uuid(),
+  // shop_id: '' or 'auto' means use LOCATION column per row; uuid means force all rows to that shop.
+  shop_id: z.string(),
   dry_run: z.boolean().default(true),
 });
 
 interface PreviewRow extends ParsedRow {
   is_duplicate: boolean;
+  resolved_shop_id: string | null;
+  resolved_shop_name: string | null;
 }
 
 export async function POST(req: NextRequest) {
@@ -25,7 +28,6 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Bad request" }, { status: 400 });
   const data = parsed.data;
 
-  // Get the CSV text from URL or paste
   let csv = data.csv ?? "";
   if (data.source === "url") {
     const url = googleSheetsCsvUrl(data.url ?? "");
@@ -41,20 +43,46 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // Check for existing SKUs (duplicates)
+  // Existing SKUs check (for de-dup on re-import)
   const skus = rows.filter((r) => r.sku).map((r) => r.sku);
   const { data: existing } = await admin.from("pieces").select("sku").in("sku", skus);
   const existingSkus = new Set((existing ?? []).map((p) => p.sku));
 
+  // Shops: for "auto" mode, match LOCATION text → shop by case-insensitive substring on name/hotel_name
+  const { data: shops } = await admin.from("shops").select("id, name, hotel_name").eq("active", true);
+  const shopList = shops ?? [];
+  function matchShop(location: string | null | undefined): { id: string; name: string } | null {
+    if (!location) return null;
+    const up = location.toUpperCase();
+    const m = shopList.find(
+      (s) => s.name.toUpperCase().includes(up) || up.includes(s.name.toUpperCase()) ||
+             (s.hotel_name && (s.hotel_name.toUpperCase().includes(up) || up.includes(s.hotel_name.toUpperCase())))
+    );
+    return m ? { id: m.id, name: m.name } : null;
+  }
+
+  const useAuto = data.shop_id === "" || data.shop_id === "auto";
+  const forcedShop = !useAuto ? shopList.find((s) => s.id === data.shop_id) ?? null : null;
+
   const preview: PreviewRow[] = rows.map((r) => {
     const is_duplicate = existingSkus.has(r.sku);
-    let status = r.status;
     const issues = [...r.issues];
-    if (is_duplicate && status === "ok") {
-      status = "skip";
-      issues.push("SKU already exists");
+    let status = r.status;
+    let resolved_shop_id: string | null = null;
+    let resolved_shop_name: string | null = null;
+    if (useAuto) {
+      const m = matchShop(r.location);
+      if (m) { resolved_shop_id = m.id; resolved_shop_name = m.name; }
+      else if (status === "ok") { status = "error"; issues.push(`unknown location "${r.location ?? ""}"`); }
+    } else if (forcedShop) {
+      resolved_shop_id = forcedShop.id;
+      resolved_shop_name = forcedShop.name;
+    } else if (status === "ok") {
+      status = "error";
+      issues.push("invalid shop selection");
     }
-    return { ...r, is_duplicate, status, issues };
+    if (is_duplicate && status === "ok") { status = "skip"; issues.push("SKU already exists"); }
+    return { ...r, is_duplicate, status, issues, resolved_shop_id, resolved_shop_name };
   });
 
   const summary = {
@@ -68,24 +96,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ preview, summary });
   }
 
-  // Commit: insert all "ok" rows.
-  const toInsert = preview.filter((r) => r.status === "ok").map((r) => ({
-    sku: r.sku,
-    description: r.description,
-    type: r.type,
-    ctw: r.ctw,
-    original_price: r.price ?? 0,
-    sale_price: r.price ?? 0,
-    current_shop_id: data.shop_id,
-    status: "in_stock" as const,
-    created_by: profile.id,
-  }));
+  const toInsert = preview
+    .filter((r) => r.status === "ok" && r.resolved_shop_id)
+    .map((r) => ({
+      sku: r.sku,
+      description: r.description,
+      type: r.type,
+      ctw: r.ctw,
+      metal: r.metal ?? null,
+      karat: r.karat ?? null,
+      main_stone: r.main_stone ?? null,
+      color_grade: r.color_grade ?? null,
+      clarity: r.clarity ?? null,
+      original_price: r.price ?? 0,
+      sale_price: r.price ?? 0,
+      current_shop_id: r.resolved_shop_id,
+      status: "in_stock" as const,
+      created_by: profile.id,
+    }));
 
   if (toInsert.length === 0) {
     return NextResponse.json({ preview, summary, inserted: 0, message: "Nothing to insert." });
   }
 
-  // Insert in chunks of 50 for safety.
   let inserted = 0;
   for (let i = 0; i < toInsert.length; i += 50) {
     const chunk = toInsert.slice(i, i + 50);

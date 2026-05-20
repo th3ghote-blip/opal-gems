@@ -14,6 +14,12 @@ interface PreviewRow {
   type: string;
   ctw: number | null;
   price: number | null;
+  karat?: string | null;
+  metal?: string | null;
+  color_grade?: string | null;
+  clarity?: string | null;
+  location?: string | null;
+  resolved_shop_name?: string | null;
   status: "ok" | "skip" | "error";
   issues: string[];
 }
@@ -104,10 +110,10 @@ export function ImportFlow({ shops, defaultShopId }: { shops: Shop[]; defaultSho
             onChange={(e) => setShopId(e.target.value)}
             className="w-full rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm"
           >
-            <option value="">— Select shop —</option>
+            <option value="auto">Auto — use LOCATION column</option>
             {shops.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
-          <p className="mt-1 text-xs text-neutral-500">All imported pieces land here.</p>
+          <p className="mt-1 text-xs text-neutral-500">Auto matches the sheet&apos;s LOCATION column to your shop names.</p>
         </label>
       </div>
 
@@ -157,6 +163,7 @@ export function ImportFlow({ shops, defaultShopId }: { shops: Shop[]; defaultSho
                 <th className="text-left  px-3 py-2">Type</th>
                 <th className="text-right px-3 py-2">CTW</th>
                 <th className="text-right px-3 py-2">Price</th>
+                <th className="text-left  px-3 py-2">Shop</th>
                 <th className="text-left  px-3 py-2">Status</th>
               </tr>
             </thead>
@@ -168,6 +175,7 @@ export function ImportFlow({ shops, defaultShopId }: { shops: Shop[]; defaultSho
                   <td className="px-3 py-2">{r.type || "—"}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.ctw ?? "—"}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.price ? `$${r.price.toLocaleString("en-US")}` : "—"}</td>
+                  <td className="px-3 py-2 text-xs">{r.resolved_shop_name ?? r.location ?? "—"}</td>
                   <td className="px-3 py-2">
                     {r.status === "ok"   && <span className="text-emerald-700 dark:text-emerald-400 text-xs">✓ ok</span>}
                     {r.status === "skip" && <span className="text-amber-700 dark:text-amber-400 text-xs">⊘ {r.issues.join(", ")}</span>}
