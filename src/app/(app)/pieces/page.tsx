@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient, getCurrentProfile } from "@/lib/supabase/server";
 import { PieceCard } from "@/components/PieceCard";
+import { PiecesFilters } from "./filters";
 
 export const dynamic = "force-dynamic";
 
@@ -82,50 +83,7 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
         </div>
       </header>
 
-      <form className="flex flex-wrap gap-2 items-center" method="get">
-        <input
-          name="q"
-          defaultValue={searchParams.q ?? ""}
-          placeholder="Search SKU"
-          className="flex-1 min-w-[160px] rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-2 text-sm"
-          autoComplete="off"
-        />
-        <select
-          name="shop"
-          defaultValue={searchParams.shop ?? ""}
-          className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-2 text-sm"
-        >
-          <option value="">All shops</option>
-          {(shops ?? []).map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
-        <select
-          name="type"
-          defaultValue={searchParams.type ?? ""}
-          className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-2 text-sm"
-        >
-          <option value="">All types</option>
-          {(types ?? []).map((t) => (
-            <option key={t.value} value={t.value}>{t.value}</option>
-          ))}
-        </select>
-        <select
-          name="status"
-          defaultValue={searchParams.status ?? ""}
-          className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-2 text-sm"
-        >
-          <option value="">All status</option>
-          <option value="in_stock">In stock</option>
-          <option value="reserved">Reserved</option>
-          <option value="sold">Sold</option>
-          <option value="in_transit">In transit</option>
-          <option value="written_off">Written off</option>
-        </select>
-        <button type="submit" className="text-sm px-3 py-2 rounded-md border border-neutral-300 dark:border-neutral-700">
-          Filter
-        </button>
-      </form>
+      <PiecesFilters shops={shops ?? []} types={types ?? []} />
 
       {error && <p className="text-sm text-red-600">{error.message}</p>}
 
