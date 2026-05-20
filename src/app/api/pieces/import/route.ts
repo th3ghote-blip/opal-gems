@@ -64,6 +64,13 @@ export async function POST(req: NextRequest) {
   const useAuto = data.shop_id === "" || data.shop_id === "auto";
   const forcedShop = !useAuto ? shopList.find((s) => s.id === data.shop_id) ?? null : null;
 
+  // Also detect SKUs that appear more than once within this same upload.
+  const skuCounts = new Map<string, number>();
+  for (const r of rows) {
+    if (r.sku) skuCounts.set(r.sku, (skuCounts.get(r.sku) ?? 0) + 1);
+  }
+  const seenInBatch = new Set<string>();
+
   const preview: PreviewRow[] = rows.map((r) => {
     const is_duplicate = existingSkus.has(r.sku);
     const issues = [...r.issues];
@@ -82,6 +89,12 @@ export async function POST(req: NextRequest) {
       issues.push("invalid shop selection");
     }
     if (is_duplicate && status === "ok") { status = "skip"; issues.push("SKU already exists"); }
+    if (status === "ok" && seenInBatch.has(r.sku)) {
+      status = "skip";
+      issues.push("duplicate SKU within this sheet");
+    } else if (status === "ok") {
+      seenInBatch.add(r.sku);
+    }
     return { ...r, is_duplicate, status, issues, resolved_shop_id, resolved_shop_name };
   });
 
