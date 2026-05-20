@@ -10,28 +10,31 @@ export default async function EditPiecePage({ params }: { params: { id: string }
   if (profile.role === "staff") redirect(`/pieces/${params.id}`);
 
   const supabase = createClient();
-  const { data: piece } = await supabase
-    .from("pieces")
-    .select("id, sku, type, metal, karat, main_stone, stone_cut, clarity, color_grade, ctw, gram_weight, length_in, width_mm, ring_size, description, original_price, sale_price, current_shop_id, status")
-    .eq("id", params.id)
-    .single();
+  const admin = profile.role === "owner" ? createAdminClient() : null;
 
-  if (!piece) notFound();
-
-  // Cost — only owner; pulled via admin client (column is revoked from authenticated).
-  let cost: number | null = null;
-  if (profile.role === "owner") {
-    const admin = createAdminClient();
-    const { data } = await admin.from("pieces").select("cost").eq("id", piece.id).single();
-    cost = data?.cost ?? null;
-  }
-
-  const [{ data: shops }, { data: enumRows }, { data: tagRows }, { data: photos }] = await Promise.all([
+  // Fetch everything in parallel — shop/enum lists don't depend on the piece,
+  // and tag/photo queries use params.id directly.
+  const [pieceRes, costRes, shopsRes, enumsRes, tagsRes, photosRes] = await Promise.all([
+    supabase
+      .from("pieces")
+      .select("id, sku, type, metal, karat, main_stone, stone_cut, clarity, color_grade, ctw, gram_weight, length_in, width_mm, ring_size, description, original_price, sale_price, current_shop_id, status")
+      .eq("id", params.id)
+      .single(),
+    admin ? admin.from("pieces").select("cost").eq("id", params.id).single() : Promise.resolve({ data: null }),
     supabase.from("shops").select("id, name").eq("active", true).order("name"),
     supabase.from("enum_values").select("enum_name, value").eq("active", true).order("sort_order"),
-    supabase.from("piece_tags").select("tag").eq("piece_id", piece.id),
-    supabase.from("piece_photos").select("id, storage_path").eq("piece_id", piece.id).order("sort_order"),
+    supabase.from("piece_tags").select("tag").eq("piece_id", params.id),
+    supabase.from("piece_photos").select("id, storage_path").eq("piece_id", params.id).order("sort_order"),
   ]);
+
+  const piece = pieceRes.data;
+  if (!piece) notFound();
+
+  const cost = (costRes.data as { cost: number | null } | null)?.cost ?? null;
+  const shops = shopsRes.data;
+  const enumRows = enumsRes.data;
+  const tagRows = tagsRes.data;
+  const photos = photosRes.data;
 
   const enums: Record<string, { value: string }[]> = {};
   for (const row of enumRows ?? []) {

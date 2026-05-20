@@ -20,17 +20,16 @@ export default async function PieceDetail({ params }: { params: { id: string } }
 
   if (!piece) notFound();
 
-  const { data: photos } = await supabase
-    .from("piece_photos")
-    .select("storage_path")
-    .eq("piece_id", piece.id)
-    .order("sort_order");
+  // Photos + tags in parallel
+  const [photosRes, tagsRes] = await Promise.all([
+    supabase.from("piece_photos").select("storage_path").eq("piece_id", piece.id).order("sort_order"),
+    supabase.from("piece_tags").select("tag").eq("piece_id", piece.id),
+  ]);
 
-  const photoUrls = (photos ?? []).map(
+  const photoUrls = (photosRes.data ?? []).map(
     (p) => supabase.storage.from("piece-photos").getPublicUrl(p.storage_path).data.publicUrl
   );
-
-  const { data: tags } = await supabase.from("piece_tags").select("tag").eq("piece_id", piece.id);
+  const tags = tagsRes.data;
 
   const shop = (piece.shops as unknown as { name: string; hotel_name: string | null } | null) ?? null;
 

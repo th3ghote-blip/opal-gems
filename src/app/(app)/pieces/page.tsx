@@ -27,16 +27,22 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
   if (searchParams.type) query = query.eq("type", searchParams.type);
   if (searchParams.status) query = query.eq("status", searchParams.status);
 
-  const { data: pieces, error } = await query;
-  const { data: shops } = await supabase.from("shops").select("id, name").eq("active", true).order("name");
-  const { data: types } = await supabase
-    .from("enum_values")
-    .select("value")
-    .eq("enum_name", "type")
-    .eq("active", true)
-    .order("sort_order");
+  // Run pieces / shops / type-enum queries in parallel.
+  const [piecesRes, shopsRes, typesRes] = await Promise.all([
+    query,
+    supabase.from("shops").select("id, name").eq("active", true).order("name"),
+    supabase
+      .from("enum_values")
+      .select("value")
+      .eq("enum_name", "type")
+      .eq("active", true)
+      .order("sort_order"),
+  ]);
+  const { data: pieces, error } = piecesRes;
+  const { data: shops } = shopsRes;
+  const { data: types } = typesRes;
 
-  // Resolve a thumbnail for each piece — first photo, public URL
+  // Photos depend on piece ids, so this one runs after.
   const ids = (pieces ?? []).map((p) => p.id);
   const { data: photos } = ids.length
     ? await supabase
