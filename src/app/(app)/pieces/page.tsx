@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { createClient, getCurrentProfile } from "@/lib/supabase/server";
 import { PieceCard } from "@/components/PieceCard";
+import { StatusBadge } from "@/components/StatusBadge";
 import { PiecesFilters } from "./filters";
+import { money } from "@/lib/format";
+import type { PieceStatus } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -10,20 +13,38 @@ interface SearchParams {
   shop?: string;
   type?: string;
   status?: string;
+  sort?: string;
+  view?: string;
 }
 
 export default async function PiecesPage({ searchParams }: { searchParams: SearchParams }) {
   const profile = (await getCurrentProfile())!;
   const supabase = createClient();
 
+  // Build sort
+  const sortMap: Record<string, { col: string; asc: boolean }> = {
+    newest:     { col: "created_at", asc: false },
+    oldest:     { col: "created_at", asc: true },
+    sku_asc:    { col: "sku",        asc: true },
+    sku_desc:   { col: "sku",        asc: false },
+    price_asc:  { col: "sale_price", asc: true },
+    price_desc: { col: "sale_price", asc: false },
+    type_asc:   { col: "type",       asc: true },
+    status:     { col: "status",     asc: true },
+  };
+  const { col, asc } = sortMap[searchParams.sort ?? ""] ?? sortMap.newest;
+
   // Build query — RLS handles shop scoping; UI filters are just helpers.
   let query = supabase
     .from("pieces")
-    .select("id, sku, type, main_stone, ctw, sale_price, status, current_shop_id, shops!current_shop_id(name)")
-    .order("created_at", { ascending: false })
-    .limit(120);
+    .select("id, sku, description, type, metal, karat, main_stone, ctw, sale_price, status, current_shop_id, shops!current_shop_id(name)")
+    .order(col, { ascending: asc })
+    .limit(250);
 
-  if (searchParams.q) query = query.ilike("sku", `%${searchParams.q}%`);
+  if (searchParams.q) {
+    // Search SKU or description
+    query = query.or(`sku.ilike.%${searchParams.q}%,description.ilike.%${searchParams.q}%`);
+  }
   if (searchParams.shop) query = query.eq("current_shop_id", searchParams.shop);
   if (searchParams.type) query = query.eq("type", searchParams.type);
   if (searchParams.status) query = query.eq("status", searchParams.status);
@@ -59,10 +80,17 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
     thumbByPiece[ph.piece_id] = data.publicUrl;
   }
 
+  const isList = searchParams.view === "list";
+
   return (
     <div className="space-y-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Pieces</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          Pieces
+          {pieces && pieces.length > 0 && (
+            <span className="ml-2 text-base font-normal text-neutral-400">{pieces.length}</span>
+          )}
+        </h1>
         <div className="flex gap-2">
           {profile.role === "owner" && (
             <Link
@@ -93,24 +121,71 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
         </div>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-        {(pieces ?? []).map((p) => (
-          <PieceCard
-            key={p.id}
-            piece={{
-              id: p.id,
-              sku: p.sku,
-              type: p.type,
-              main_stone: p.main_stone,
-              ctw: p.ctw,
-              sale_price: p.sale_price,
-              status: p.status,
-              thumb_url: thumbByPiece[p.id] ?? null,
-              shop_name: (p.shops as unknown as { name: string } | null)?.name ?? null,
-            }}
-          />
-        ))}
-      </div>
+      {/* ── LIST VIEW ─────────────────────────────────────── */}
+      {isList && pieces && pieces.length > 0 && (
+        <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="text-xs text-neutral-500 bg-neutral-50 dark:bg-neutral-900 sticky top-0">
+              <tr>
+                <th className="text-left px-3 py-2 font-medium">SKU</th>
+                <th className="text-left px-3 py-2 font-medium">Name / Description</th>
+                <th className="text-left px-3 py-2 font-medium">Type</th>
+                <th className="text-left px-3 py-2 font-medium">Metal</th>
+                <th className="text-right px-3 py-2 font-medium">CTW</th>
+                <th className="text-right px-3 py-2 font-medium">Price</th>
+                <th className="text-left px-3 py-2 font-medium">Shop</th>
+                <th className="text-left px-3 py-2 font-medium">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+              {pieces.map((p) => {
+                const shopName = (p.shops as unknown as { name: string } | null)?.name ?? null;
+                const metalLabel = [p.karat, p.metal].filter(Boolean).join(" ") || (p.main_stone ?? null);
+                return (
+                  <Link key={p.id} href={`/pieces/${p.id}`} legacyBehavior>
+                    <tr className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer">
+                      <td className="px-3 py-2 font-mono text-xs whitespace-nowrap">{p.sku}</td>
+                      <td className="px-3 py-2 max-w-[220px] truncate text-neutral-700 dark:text-neutral-300">
+                        {p.description || "—"}
+                      </td>
+                      <td className="px-3 py-2 whitespace-nowrap">{p.type || "—"}</td>
+                      <td className="px-3 py-2 whitespace-nowrap text-xs text-neutral-500">{metalLabel || "—"}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-xs">{p.ctw ?? "—"}</td>
+                      <td className="px-3 py-2 text-right tabular-nums font-medium">{money(p.sale_price)}</td>
+                      <td className="px-3 py-2 text-xs text-neutral-500 whitespace-nowrap">{shopName ?? "—"}</td>
+                      <td className="px-3 py-2">
+                        <StatusBadge status={p.status as PieceStatus} />
+                      </td>
+                    </tr>
+                  </Link>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* ── GRID VIEW ─────────────────────────────────────── */}
+      {!isList && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {(pieces ?? []).map((p) => (
+            <PieceCard
+              key={p.id}
+              piece={{
+                id: p.id,
+                sku: p.sku,
+                type: p.type,
+                main_stone: p.main_stone,
+                ctw: p.ctw,
+                sale_price: p.sale_price,
+                status: p.status,
+                thumb_url: thumbByPiece[p.id] ?? null,
+                shop_name: (p.shops as unknown as { name: string } | null)?.name ?? null,
+              }}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
