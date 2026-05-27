@@ -8,6 +8,7 @@ const body = z.object({
   full_name: z.string().min(1),
   role: z.enum(["owner", "manager", "staff"]).default("staff"),
   shop_ids: z.array(z.string().uuid()).optional().default([]),
+  password: z.string().min(6).optional(),
 });
 
 export async function POST(req: NextRequest) {
@@ -17,7 +18,7 @@ export async function POST(req: NextRequest) {
 
   const parsed = body.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Bad request" }, { status: 400 });
-  const { email, full_name, role, shop_ids } = parsed.data;
+  const { email, full_name, role, shop_ids, password } = parsed.data;
 
   const admin = createAdminClient();
 
@@ -26,6 +27,7 @@ export async function POST(req: NextRequest) {
     email,
     email_confirm: true,
     user_metadata: { full_name },
+    ...(password ? { password } : {}),
   });
   if (cErr || !created.user) {
     return NextResponse.json({ error: cErr?.message ?? "Failed to create user" }, { status: 500 });

@@ -155,6 +155,7 @@ function InviteForm({ shops, onDone }: { shops: Shop[]; onDone: () => void }) {
       full_name: String(fd.get("full_name") ?? "").trim(),
       role: String(fd.get("role") ?? "staff") as "staff" | "manager" | "owner",
       shop_ids: Array.from(fd.getAll("shop_ids")).map(String),
+      password: String(fd.get("password") ?? "").trim() || undefined,
     };
     start(async () => {
       const res = await fetch("/api/staff/invite", {
@@ -179,6 +180,7 @@ function InviteForm({ shops, onDone }: { shops: Shop[]; onDone: () => void }) {
       <form onSubmit={onSubmit} className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
         <input name="full_name" required placeholder="Full name" className={inputCls} />
         <input name="email"     required type="email" placeholder="email@example.com" className={inputCls} />
+        <input name="password" type="password" autoComplete="new-password" placeholder="Password (optional — required if no real email)" className={inputCls} />
         <select name="role" defaultValue="staff" className={inputCls}>
           <option value="staff">staff</option>
           <option value="manager">manager</option>
