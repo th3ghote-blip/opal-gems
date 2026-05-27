@@ -10,6 +10,7 @@ const body = z.object({
   customer_id: z.string().uuid().nullable().optional(),
   staff_id: z.string().uuid(),
   discount_pct: z.number().min(0).max(100),
+  qty_sold: z.number().int().min(1).default(1),
   payment_method: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   reason: z.string().nullable().optional(),
@@ -43,6 +44,9 @@ export async function POST(req: NextRequest) {
   if (!pieceRes.data) return NextResponse.json({ error: "Piece not found" }, { status: 404 });
   if (pieceRes.data.status === "sold") return NextResponse.json({ error: "Piece already sold" }, { status: 409 });
   if (pieceRes.data.status === "written_off") return NextResponse.json({ error: "Piece written off" }, { status: 409 });
+  if (data.qty_sold > (pieceRes.data.quantity ?? 1)) {
+    return NextResponse.json({ error: `Only ${pieceRes.data.quantity ?? 1} in stock` }, { status: 409 });
+  }
 
   const settings = Object.fromEntries((settingsRes.data ?? []).map((s) => [s.key, s.value]));
   const threshold = Number(settings.max_no_approval_discount_pct ?? 10);
@@ -100,28 +104,32 @@ export async function POST(req: NextRequest) {
   // Complete sale immediately.
   const netPrice = +(grossPrice * (1 - data.discount_pct / 100)).toFixed(2);
   const commissionAmount = +(netPrice * (commissionPct / 100)).toFixed(2);
+  const qtySold = data.qty_sold ?? 1;
 
-  const { data: sale, error: saleErr } = await admin
+  const saleRow = {
+    piece_id: data.piece_id,
+    customer_id: data.customer_id ?? null,
+    staff_id: data.staff_id,
+    shop_id: piece.current_shop_id,
+    gross_price: grossPrice,
+    discount_pct: data.discount_pct,
+    net_price: netPrice,
+    staff_commission_pct: commissionPct,
+    staff_commission_amount: commissionAmount,
+    payment_method: data.payment_method ?? null,
+    notes: data.notes ?? null,
+  };
+
+  // Insert one sale record per unit sold
+  const { data: insertedSales, error: saleErr } = await admin
     .from("sales")
-    .insert({
-      piece_id: data.piece_id,
-      customer_id: data.customer_id ?? null,
-      staff_id: data.staff_id,
-      shop_id: piece.current_shop_id,
-      gross_price: grossPrice,
-      discount_pct: data.discount_pct,
-      net_price: netPrice,
-      staff_commission_pct: commissionPct,
-      staff_commission_amount: commissionAmount,
-      payment_method: data.payment_method ?? null,
-      notes: data.notes ?? null,
-    })
-    .select("id")
-    .single();
+    .insert(Array.from({ length: qtySold }, () => ({ ...saleRow })))
+    .select("id");
   if (saleErr) return NextResponse.json({ error: saleErr.message }, { status: 500 });
+  const sale = insertedSales?.[0];
 
   // Decrement quantity. Flip to 'sold' only when stock hits 0.
-  const newQty = Math.max(0, (piece.quantity ?? 1) - 1);
+  const newQty = Math.max(0, (piece.quantity ?? 1) - qtySold);
   await admin.from("pieces").update({
     quantity: newQty,
     ...(newQty === 0 ? { status: "sold" } : {}),

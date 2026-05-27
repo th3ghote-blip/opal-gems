@@ -10,6 +10,7 @@ interface Piece {
   type: string;
   original_price: number;
   sale_price: number;
+  quantity: number;
   current_shop_id: string | null;
 }
 
@@ -54,6 +55,7 @@ export function SellForm({
   const [msg, setMsg] = useState<string | null>(null);
 
   const [discountPct, setDiscountPct] = useState(0);
+  const [qtySold, setQtySold] = useState(1);
   const [staffId, setStaffId] = useState(currentUser.id);
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [customerQuery, setCustomerQuery] = useState("");
@@ -87,6 +89,7 @@ export function SellForm({
   const commissionPct = selectedStaff.commission_pct ?? defaultCommissionPct;
   const commissionAmount = +(netPrice * (commissionPct / 100)).toFixed(2);
   const overThreshold = discountPct > maxNoApprovalDiscount;
+  const multiQty = piece.quantity > 1;
   const isOwner = currentUser.role === "owner";
 
   async function quickAddCustomer(e: React.FormEvent<HTMLFormElement>) {
@@ -128,6 +131,7 @@ export function SellForm({
       customer_id: customer?.id ?? null,
       staff_id: staffId,
       discount_pct: discountPct,
+      qty_sold: qtySold,
       payment_method: String(fd.get("payment_method") ?? "") || null,
       notes: String(fd.get("notes") ?? "").trim() || null,
       reason: String(fd.get("discount_reason") ?? "").trim() || null,
@@ -217,11 +221,35 @@ export function SellForm({
 
       <section className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-4 space-y-3">
         <div className="text-xs uppercase tracking-wide text-neutral-500">Pricing</div>
+
+        {multiQty && (
+          <div>
+            <label className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+              Quantity <span className="text-neutral-400">({piece.quantity} in stock)</span>
+            </label>
+            <input
+              type="number"
+              min={1}
+              max={piece.quantity}
+              step={1}
+              value={qtySold}
+              onChange={(e) => setQtySold(Math.min(piece.quantity, Math.max(1, parseInt(e.target.value) || 1)))}
+              className={inputCls + " w-24"}
+            />
+          </div>
+        )}
+
         <div className="grid grid-cols-2 gap-3 text-sm">
           <Stat label="Tag price"     value={fmt(grossPrice)} />
           <Stat label="Net price"     value={fmt(netPrice)} accent={overThreshold ? "amber" : undefined} />
           <Stat label="Commission %"  value={`${commissionPct}%`} />
           <Stat label="Commission $"  value={fmt(commissionAmount)} />
+          {multiQty && qtySold > 1 && (
+            <>
+              <Stat label={`Total (×${qtySold})`} value={fmt(netPrice * qtySold)} accent={overThreshold ? "amber" : undefined} />
+              <Stat label="Total commission" value={fmt(commissionAmount * qtySold)} />
+            </>
+          )}
         </div>
 
         <div>

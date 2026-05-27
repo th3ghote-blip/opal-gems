@@ -11,7 +11,7 @@ export default async function SellPage({ params }: { params: { id: string } }) {
   const [pieceRes, settingsRes, staffRes, paymentMethodsRes] = await Promise.all([
     supabase
       .from("pieces")
-      .select("id, sku, type, original_price, sale_price, status, current_shop_id, shops!current_shop_id(name)")
+      .select("id, sku, type, original_price, sale_price, quantity, status, current_shop_id, shops!current_shop_id(name)")
       .eq("id", params.id)
       .single(),
     supabase
@@ -57,6 +57,7 @@ export default async function SellPage({ params }: { params: { id: string } }) {
           type: piece.type,
           original_price: Number(piece.original_price ?? 0),
           sale_price: Number(piece.sale_price ?? 0),
+          quantity: Number(piece.quantity ?? 1),
           current_shop_id: piece.current_shop_id,
         }}
         currentUser={profile}
