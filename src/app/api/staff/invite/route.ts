@@ -7,7 +7,7 @@ const body = z.object({
   email: z.string().email(),
   full_name: z.string().min(1),
   role: z.enum(["owner", "manager", "staff"]).default("staff"),
-  default_shop_id: z.string().uuid().nullable().optional(),
+  shop_ids: z.array(z.string().uuid()).optional().default([]),
 });
 
 export async function POST(req: NextRequest) {
@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
 
   const parsed = body.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Bad request" }, { status: 400 });
-  const { email, full_name, role, default_shop_id } = parsed.data;
+  const { email, full_name, role, shop_ids } = parsed.data;
 
   const admin = createAdminClient();
 
@@ -31,6 +31,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: cErr?.message ?? "Failed to create user" }, { status: 500 });
   }
 
+  const userId = created.user.id;
+
   // The profile-on-signup trigger already inserted a row; update to set role/shop/active/full_name.
   const { error: uErr } = await admin
     .from("profiles")
@@ -38,10 +40,18 @@ export async function POST(req: NextRequest) {
       role,
       active: true,
       full_name,
-      default_shop_id: default_shop_id ?? null,
+      default_shop_id: shop_ids[0] ?? null,
     })
-    .eq("id", created.user.id);
+    .eq("id", userId);
   if (uErr) return NextResponse.json({ error: uErr.message }, { status: 500 });
 
-  return NextResponse.json({ id: created.user.id });
+  // Insert shop assignments
+  if (shop_ids.length > 0) {
+    const { error: sErr } = await admin
+      .from("profile_shops")
+      .insert(shop_ids.map((shop_id) => ({ profile_id: userId, shop_id })));
+    if (sErr) return NextResponse.json({ error: sErr.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ id: userId });
 }

@@ -17,11 +17,23 @@ export default async function SettingsPage({ searchParams }: Props) {
   const tab = searchParams.tab ?? "settings";
   const supabase = createClient();
 
-  const [{ data: settings }, { data: shops }, { data: profiles }] = await Promise.all([
+  const [{ data: settings }, { data: shops }, { data: profiles }, { data: profileShopsRaw }] = await Promise.all([
     supabase.from("settings").select("key, value").order("key"),
     supabase.from("shops").select("id, name, hotel_name, address, manager_id, hotel_commission_pct, sales_tax_pct, active").order("name"),
     supabase.from("profiles").select("id, full_name, role, default_shop_id, commission_pct, active, phone").order("full_name"),
+    supabase.from("profile_shops").select("profile_id, shop_id"),
   ]);
+
+  // Build shop_ids map: profile_id → shop_id[]
+  const shopIdsByProfile: Record<string, string[]> = {};
+  for (const row of profileShopsRaw ?? []) {
+    if (!shopIdsByProfile[row.profile_id]) shopIdsByProfile[row.profile_id] = [];
+    shopIdsByProfile[row.profile_id].push(row.shop_id);
+  }
+  const profilesWithShops = (profiles ?? []).map((p) => ({
+    ...p,
+    shop_ids: shopIdsByProfile[p.id] ?? [],
+  }));
 
   return (
     <div className="space-y-6">
@@ -37,7 +49,7 @@ export default async function SettingsPage({ searchParams }: Props) {
       </nav>
 
       {tab === "settings" && <SettingsTab rows={settings ?? []} />}
-      {tab === "staff"    && <StaffTab profiles={profiles ?? []} shops={shops ?? []} />}
+      {tab === "staff"    && <StaffTab profiles={profilesWithShops} shops={shops ?? []} />}
       {tab === "shops"    && <ShopsTab shops={shops ?? []} profiles={profiles ?? []} />}
     </div>
   );

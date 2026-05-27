@@ -8,6 +8,7 @@ interface Profile {
   full_name: string;
   role: "owner" | "manager" | "staff";
   default_shop_id: string | null;
+  shop_ids: string[];
   commission_pct: number;
   active: boolean;
   phone: string | null;
@@ -23,7 +24,7 @@ export function StaffTab({ profiles, shops }: { profiles: Profile[]; shops: Shop
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
 
-  function update(id: string, patch: Partial<Profile> & { email?: string }) {
+  function update(id: string, patch: Record<string, unknown>) {
     setErr(null);
     start(async () => {
       const res = await fetch(`/api/staff/${id}`, {
@@ -47,55 +48,14 @@ export function StaffTab({ profiles, shops }: { profiles: Profile[]; shops: Shop
             <tr>
               <th className="text-left px-3 py-2">Name</th>
               <th className="text-left px-3 py-2">Role</th>
-              <th className="text-left px-3 py-2">Shop</th>
+              <th className="text-left px-3 py-2">Shops</th>
               <th className="text-left px-3 py-2">Comm %</th>
               <th className="text-left px-3 py-2">Active</th>
             </tr>
           </thead>
           <tbody>
             {profiles.map((p) => (
-              <tr key={p.id} className="border-t border-neutral-200 dark:border-neutral-800">
-                <td className="px-3 py-2">{p.full_name}</td>
-                <td className="px-3 py-2">
-                  <select
-                    defaultValue={p.role}
-                    onChange={(e) => update(p.id, { role: e.target.value as Profile["role"] })}
-                    className="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
-                  >
-                    <option value="staff">staff</option>
-                    <option value="manager">manager</option>
-                    <option value="owner">owner</option>
-                  </select>
-                </td>
-                <td className="px-3 py-2">
-                  <select
-                    defaultValue={p.default_shop_id ?? ""}
-                    onChange={(e) => update(p.id, { default_shop_id: e.target.value || null })}
-                    className="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
-                  >
-                    <option value="">—</option>
-                    {shops.map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </td>
-                <td className="px-3 py-2 w-20">
-                  <input
-                    type="number"
-                    step="0.5"
-                    defaultValue={p.commission_pct}
-                    onBlur={(e) => update(p.id, { commission_pct: Number(e.target.value) })}
-                    className="w-16 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
-                  />
-                </td>
-                <td className="px-3 py-2">
-                  <input
-                    type="checkbox"
-                    defaultChecked={p.active}
-                    onChange={(e) => update(p.id, { active: e.target.checked })}
-                  />
-                </td>
-              </tr>
+              <ProfileRow key={p.id} p={p} shops={shops} onUpdate={update} />
             ))}
           </tbody>
         </table>
@@ -103,6 +63,80 @@ export function StaffTab({ profiles, shops }: { profiles: Profile[]; shops: Shop
       {err && <p className="text-sm text-red-600">{err}</p>}
       {pending && <p className="text-xs text-neutral-500">Saving…</p>}
     </div>
+  );
+}
+
+function ProfileRow({
+  p,
+  shops,
+  onUpdate,
+}: {
+  p: Profile;
+  shops: Shop[];
+  onUpdate: (id: string, patch: Record<string, unknown>) => void;
+}) {
+  const [shopIds, setShopIds] = useState<string[]>(p.shop_ids);
+
+  function toggleShop(shopId: string, checked: boolean) {
+    const newIds = checked ? [...shopIds, shopId] : shopIds.filter((id) => id !== shopId);
+    setShopIds(newIds);
+    onUpdate(p.id, { shop_ids: newIds });
+  }
+
+  return (
+    <tr className="border-t border-neutral-200 dark:border-neutral-800">
+      <td className="px-3 py-2 font-medium">{p.full_name}</td>
+
+      {/* Role */}
+      <td className="px-3 py-2">
+        <select
+          defaultValue={p.role}
+          onChange={(e) => onUpdate(p.id, { role: e.target.value })}
+          className="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
+        >
+          <option value="staff">staff</option>
+          <option value="manager">manager</option>
+          <option value="owner">owner</option>
+        </select>
+      </td>
+
+      {/* Shops — checkboxes */}
+      <td className="px-3 py-2">
+        <div className="flex flex-col gap-1">
+          {shops.map((s) => (
+            <label key={s.id} className="flex items-center gap-1.5 text-xs cursor-pointer whitespace-nowrap">
+              <input
+                type="checkbox"
+                checked={shopIds.includes(s.id)}
+                onChange={(e) => toggleShop(s.id, e.target.checked)}
+                className="accent-gold-600"
+              />
+              {s.name}
+            </label>
+          ))}
+        </div>
+      </td>
+
+      {/* Commission % */}
+      <td className="px-3 py-2 w-20">
+        <input
+          type="number"
+          step="0.5"
+          defaultValue={p.commission_pct}
+          onBlur={(e) => onUpdate(p.id, { commission_pct: Number(e.target.value) })}
+          className="w-16 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
+        />
+      </td>
+
+      {/* Active */}
+      <td className="px-3 py-2">
+        <input
+          type="checkbox"
+          defaultChecked={p.active}
+          onChange={(e) => onUpdate(p.id, { active: e.target.checked })}
+        />
+      </td>
+    </tr>
   );
 }
 
@@ -120,7 +154,7 @@ function InviteForm({ shops, onDone }: { shops: Shop[]; onDone: () => void }) {
       email: String(fd.get("email") ?? "").trim(),
       full_name: String(fd.get("full_name") ?? "").trim(),
       role: String(fd.get("role") ?? "staff") as "staff" | "manager" | "owner",
-      default_shop_id: (String(fd.get("default_shop_id") ?? "") || null) as string | null,
+      shop_ids: Array.from(fd.getAll("shop_ids")).map(String),
     };
     start(async () => {
       const res = await fetch("/api/staff/invite", {
@@ -150,14 +184,26 @@ function InviteForm({ shops, onDone }: { shops: Shop[]; onDone: () => void }) {
           <option value="manager">manager</option>
           <option value="owner">owner</option>
         </select>
-        <select name="default_shop_id" className={inputCls}>
-          <option value="">— No shop —</option>
-          {shops.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
+
+        {/* Shop checkboxes */}
+        <div>
+          <p className="text-xs text-neutral-500 mb-1.5">Shops</p>
+          <div className="flex flex-col gap-1.5">
+            {shops.map((s) => (
+              <label key={s.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" name="shop_ids" value={s.id} className="accent-gold-600" />
+                {s.name}
+              </label>
+            ))}
+          </div>
+        </div>
+
         <div className="sm:col-span-2 flex items-center gap-3">
-          <button type="submit" disabled={pending} className="px-3 py-1.5 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950 text-sm disabled:opacity-50">
+          <button
+            type="submit"
+            disabled={pending}
+            className="px-3 py-1.5 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950 text-sm disabled:opacity-50"
+          >
             {pending ? "Adding…" : "Add staff"}
           </button>
           {err && <span className="text-sm text-red-600">{err}</span>}
