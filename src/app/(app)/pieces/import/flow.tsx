@@ -14,6 +14,7 @@ interface PreviewRow {
   type: string;
   ctw: number | null;
   price: number | null;
+  quantity?: number | null;
   karat?: string | null;
   metal?: string | null;
   color_grade?: string | null;
@@ -163,6 +164,7 @@ export function ImportFlow({ shops, defaultShopId }: { shops: Shop[]; defaultSho
                 <th className="text-left  px-3 py-2">Name</th>
                 <th className="text-left  px-3 py-2">Type</th>
                 <th className="text-right px-3 py-2">CTW</th>
+                <th className="text-right px-3 py-2">Qty</th>
                 <th className="text-right px-3 py-2">Price</th>
                 <th className="text-left  px-3 py-2">Shop</th>
                 <th className="text-left  px-3 py-2">Status</th>
@@ -175,6 +177,7 @@ export function ImportFlow({ shops, defaultShopId }: { shops: Shop[]; defaultSho
                   <td className="px-3 py-2">{r.description || "—"}</td>
                   <td className="px-3 py-2">{r.type || "—"}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.ctw ?? "—"}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{r.quantity ?? 1}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{r.price ? `$${r.price.toLocaleString("en-US")}` : "—"}</td>
                   <td className="px-3 py-2 text-xs">{r.resolved_shop_name ?? r.location ?? "—"}</td>
                   <td className="px-3 py-2">
