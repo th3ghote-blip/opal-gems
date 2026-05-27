@@ -23,8 +23,7 @@ as $$
   select coalesce((select role from public.profiles where id = auth.uid()) in ('owner','manager'), false);
 $$;
 
--- Shops the current user can access: owner -> all, manager -> shops where they're listed
--- as manager, staff -> their default shop.
+-- Shops the current user can access: owner -> all, everyone else -> profile_shops junction.
 create or replace function public.current_user_shop_ids()
 returns setof uuid
 language plpgsql stable security definer set search_path = public
@@ -35,10 +34,8 @@ begin
   select role into v_role from public.profiles where id = v_uid;
   if v_role = 'owner' then
     return query select id from public.shops where active;
-  elsif v_role = 'manager' then
-    return query select id from public.shops where active and manager_id = v_uid;
   else
-    return query select default_shop_id from public.profiles where id = v_uid and default_shop_id is not null;
+    return query select shop_id from public.profile_shops where profile_id = v_uid;
   end if;
 end $$;
 
