@@ -5,13 +5,18 @@ import { money } from "@/lib/format";
 export const dynamic = "force-dynamic";
 
 interface SaleRow {
+  id: string;
+  piece_id: string;
   net_price: number | string;
+  gross_price: number | string;
+  discount_pct: number | string;
   staff_commission_amount: number | string;
   sale_date: string;
   staff_id: string;
   shop_id: string;
   profiles: { full_name: string } | null;
   shops: { name: string } | null;
+  pieces: { sku: string; type: string } | null;
 }
 
 export default async function Dashboard() {
@@ -28,9 +33,10 @@ export default async function Dashboard() {
     supabase
       .from("sales")
       .select(`
-        net_price, staff_commission_amount, sale_date, staff_id, shop_id,
+        id, piece_id, net_price, gross_price, discount_pct, staff_commission_amount, sale_date, staff_id, shop_id,
         profiles!staff_id (full_name),
-        shops!shop_id (name)
+        shops!shop_id (name),
+        pieces!piece_id (sku, type)
       `)
       .gte("sale_date", yearStart)
       .order("sale_date", { ascending: false }),
@@ -182,6 +188,55 @@ export default async function Dashboard() {
                         <td className="px-3 py-2 text-right tabular-nums">{money(r.commissions)}</td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* Recent sales — owner and manager */}
+          {(isOwner || profile.role === "manager") && (
+            <section>
+              <h2 className="text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Recent sales</h2>
+              <div className="rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-xs text-neutral-500 bg-neutral-50 dark:bg-neutral-900">
+                    <tr>
+                      <th className="text-left  px-3 py-2">Date</th>
+                      <th className="text-left  px-3 py-2">Piece</th>
+                      <th className="text-left  px-3 py-2">Sold by</th>
+                      <th className="text-left  px-3 py-2">Shop</th>
+                      <th className="text-right px-3 py-2">Tag price</th>
+                      <th className="text-right px-3 py-2">Discount</th>
+                      <th className="text-right px-3 py-2">Net</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sales.slice(0, 50).map((s) => {
+                      const disc = Number(s.discount_pct ?? 0);
+                      return (
+                        <tr key={s.id} className="border-t border-neutral-200 dark:border-neutral-800">
+                          <td className="px-3 py-2 text-xs text-neutral-500 whitespace-nowrap">
+                            {new Date(s.sale_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          </td>
+                          <td className="px-3 py-2">
+                            <Link href={`/pieces/${s.piece_id}`} className="hover:underline">
+                              <span className="font-mono text-xs">{s.pieces?.sku ?? "—"}</span>
+                              {s.pieces?.type && <span className="text-neutral-500 text-xs ml-1">· {s.pieces.type}</span>}
+                            </Link>
+                          </td>
+                          <td className="px-3 py-2 text-xs">{s.profiles?.full_name ?? "—"}</td>
+                          <td className="px-3 py-2 text-xs text-neutral-500">{s.shops?.name ?? "—"}</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-xs">{money(s.gross_price)}</td>
+                          <td className="px-3 py-2 text-right tabular-nums text-xs">
+                            {disc > 0
+                              ? <span className="text-amber-600 font-medium">{disc}%</span>
+                              : <span className="text-neutral-400">—</span>}
+                          </td>
+                          <td className="px-3 py-2 text-right tabular-nums font-medium">{money(s.net_price)}</td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
