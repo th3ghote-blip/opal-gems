@@ -96,7 +96,11 @@ export function PieceForm({ initial = {}, shops, enums, isOwner, mode }: Props) 
       ring_size: numOrNull(fd.get("ring_size")),
       description: nullable(fd.get("description")),
       original_price: numOrNull(fd.get("original_price")),
-      sale_price: numOrNull(fd.get("sale_price")),
+      // New pieces haven't been sold yet — sale price starts equal to original price.
+      // It gets updated properly when a sale is recorded through the sell flow.
+      sale_price: mode === "new"
+        ? numOrNull(fd.get("original_price"))
+        : numOrNull(fd.get("sale_price")),
       cost: isOwner ? numOrNull(fd.get("cost")) : undefined,
       current_shop_id: nullable(fd.get("current_shop_id")),
       status: String(fd.get("status") ?? "in_stock"),
@@ -174,12 +178,27 @@ export function PieceForm({ initial = {}, shops, enums, isOwner, mode }: Props) 
       </Section>
 
       <Section title="Pricing">
-        <Field label="Original price ($)" required>
-          <input type="number" step="0.01" name="original_price" defaultValue={initial.original_price ?? ""} required className={inputCls} />
+        <Field label="Retail price ($)" required>
+          <input
+            type="number"
+            step="0.01"
+            name="original_price"
+            defaultValue={initial.original_price ?? ""}
+            required
+            className={inputCls}
+          />
         </Field>
-        <Field label="Sale price ($)" required>
-          <input type="number" step="0.01" name="sale_price" defaultValue={initial.sale_price ?? ""} required className={inputCls} />
-        </Field>
+        {mode === "edit" && (
+          <Field label="Sale price ($)">
+            <input
+              type="number"
+              step="0.01"
+              name="sale_price"
+              defaultValue={initial.sale_price ?? ""}
+              className={inputCls}
+            />
+          </Field>
+        )}
         {isOwner && (
           <Field label="Cost ($) — owner only">
             <input type="number" step="0.01" name="cost" defaultValue={initial.cost ?? ""} className={inputCls} />
