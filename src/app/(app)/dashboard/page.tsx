@@ -217,7 +217,7 @@ export default async function Dashboard() {
                       return (
                         <tr key={s.id} className="border-t border-neutral-200 dark:border-neutral-800">
                           <td className="px-3 py-2 text-xs text-neutral-500 whitespace-nowrap">
-                            {new Date(s.sale_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            {new Date(s.sale_date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                           </td>
                           <td className="px-3 py-2">
                             <Link href={`/pieces/${s.piece_id}`} className="hover:underline">
