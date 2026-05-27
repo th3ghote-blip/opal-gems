@@ -161,7 +161,11 @@ create policy customers_delete on public.customers for delete to authenticated u
 create policy sales_read on public.sales for select to authenticated
   using (
     public.is_owner()
-    or shop_id in (select public.current_user_shop_ids())
+    or (
+      (select role from public.profiles where id = auth.uid()) = 'manager'
+      and shop_id in (select public.current_user_shop_ids())
+    )
+    or staff_id = auth.uid()
   );
 
 create policy sales_insert on public.sales for insert to authenticated
