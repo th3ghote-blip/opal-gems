@@ -78,9 +78,9 @@ create policy profiles_owner_write on public.profiles
 
 -- ---------- SHOPS ----------
 
--- Anyone signed in can read active shops (so staff can see the shop picker).
+-- Staff/managers see only their assigned shops; owners see all active shops.
 create policy shops_read on public.shops
-  for select to authenticated using (active or public.is_owner());
+  for select to authenticated using (id in (select public.current_user_shop_ids()));
 
 create policy shops_owner_write on public.shops
   for all to authenticated
