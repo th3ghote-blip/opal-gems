@@ -3,11 +3,12 @@
 -- via the auth trigger the first time each user signs in via magic link.
 -- The owner then promotes them via the settings page.
 
--- 3 shops
+-- 4 shops (Jupiter has 2 showcases)
 insert into public.shops (name, hotel_name, address) values
   ('Selina Clearwater', 'Selina Hotel Clearwater', 'Clearwater Beach, FL'),
   ('Opal Grande',       'Opal Grand Resort',       'Delray Beach, FL'),
-  ('Jupiter',           'Jupiter Beach Resort',    'Jupiter, FL')
+  ('Jupiter 1',         'Jupiter Beach Resort',    'Jupiter, FL'),
+  ('Jupiter 2',         'Jupiter Beach Resort',    'Jupiter, FL')
 on conflict do nothing;
 
 -- Settings
