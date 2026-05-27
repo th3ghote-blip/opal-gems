@@ -5,7 +5,7 @@
 
 -- 4 shops (Jupiter has 2 showcases)
 insert into public.shops (name, hotel_name, address) values
-  ('Selina Clearwater', 'Selina Hotel Clearwater', 'Clearwater Beach, FL'),
+  ('Clearwater',        'Selina Hotel Clearwater', 'Clearwater Beach, FL'),
   ('Opal Grande',       'Opal Grand Resort',       'Delray Beach, FL'),
   ('Jupiter 1',         'Jupiter Beach Resort',    'Jupiter, FL'),
   ('Jupiter 2',         'Jupiter Beach Resort',    'Jupiter, FL')
