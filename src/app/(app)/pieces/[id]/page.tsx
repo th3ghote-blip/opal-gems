@@ -5,6 +5,7 @@ import { createClient, getCurrentProfile } from "@/lib/supabase/server";
 import { StatusBadge } from "@/components/StatusBadge";
 import { money, moneyExact } from "@/lib/format";
 import { CostRevealButton } from "./cost-button";
+import { SaleSection } from "./sale-section";
 
 export const dynamic = "force-dynamic";
 
@@ -20,16 +21,28 @@ export default async function PieceDetail({ params }: { params: { id: string } }
 
   if (!piece) notFound();
 
-  // Photos + tags in parallel
-  const [photosRes, tagsRes] = await Promise.all([
+  const isOwner = profile.role === "owner";
+
+  // Photos, tags, sales in parallel
+  const [photosRes, tagsRes, salesRes, staffRes] = await Promise.all([
     supabase.from("piece_photos").select("storage_path").eq("piece_id", piece.id).order("sort_order"),
     supabase.from("piece_tags").select("tag").eq("piece_id", piece.id),
+    supabase
+      .from("sales")
+      .select("id, sale_date, net_price, gross_price, discount_pct, staff_commission_amount, payment_method, notes, staff_id, profiles!staff_id(full_name)")
+      .eq("piece_id", piece.id)
+      .order("sale_date", { ascending: false }),
+    isOwner
+      ? supabase.from("profiles").select("id, full_name").eq("active", true).order("full_name")
+      : Promise.resolve({ data: [] }),
   ]);
 
   const photoUrls = (photosRes.data ?? []).map(
     (p) => supabase.storage.from("piece-photos").getPublicUrl(p.storage_path).data.publicUrl
   );
   const tags = tagsRes.data;
+  const sales = (salesRes.data ?? []) as unknown as Parameters<typeof SaleSection>[0]["sales"];
+  const staffOptions = (staffRes.data ?? []) as { id: string; full_name: string }[];
 
   const shop = (piece.shops as unknown as { name: string; hotel_name: string | null } | null) ?? null;
 
@@ -123,6 +136,8 @@ export default async function PieceDetail({ params }: { params: { id: string } }
               ))}
             </div>
           )}
+
+          <SaleSection sales={sales} staffOptions={staffOptions} isOwner={isOwner} />
         </div>
       </section>
     </div>
