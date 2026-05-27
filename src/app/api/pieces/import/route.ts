@@ -43,10 +43,12 @@ export async function POST(req: NextRequest) {
 
   const admin = createAdminClient();
 
-  // Existing SKUs check (for de-dup on re-import)
+  // Fetch existing (sku, shop) pairs — duplicates are per-shop, not global.
+  // Same SKU in Jupiter 1 and Jupiter 2 are two distinct physical pieces.
   const skus = rows.filter((r) => r.sku).map((r) => r.sku);
-  const { data: existing } = await admin.from("pieces").select("sku").in("sku", skus);
-  const existingSkus = new Set((existing ?? []).map((p) => p.sku));
+  const { data: existing } = await admin.from("pieces").select("sku, current_shop_id").in("sku", skus);
+  // Key format: "SKU:::shop_id"
+  const existingByShop = new Set((existing ?? []).map((p) => `${p.sku}:::${p.current_shop_id}`));
 
   // Shops: for "auto" mode, match LOCATION text → shop by case-insensitive substring on name/hotel_name
   const { data: shops } = await admin.from("shops").select("id, name, hotel_name").eq("active", true);
@@ -64,19 +66,16 @@ export async function POST(req: NextRequest) {
   const useAuto = data.shop_id === "" || data.shop_id === "auto";
   const forcedShop = !useAuto ? shopList.find((s) => s.id === data.shop_id) ?? null : null;
 
-  // Also detect SKUs that appear more than once within this same upload.
-  const skuCounts = new Map<string, number>();
-  for (const r of rows) {
-    if (r.sku) skuCounts.set(r.sku, (skuCounts.get(r.sku) ?? 0) + 1);
-  }
+  // Within-batch dedup also keyed by sku:::shop_id
   const seenInBatch = new Set<string>();
 
   const preview: PreviewRow[] = rows.map((r) => {
-    const is_duplicate = existingSkus.has(r.sku);
     const issues = [...r.issues];
     let status = r.status;
     let resolved_shop_id: string | null = null;
     let resolved_shop_name: string | null = null;
+
+    // Resolve shop FIRST — we need the shop_id before we can check for duplicates
     if (useAuto) {
       const m = matchShop(r.location);
       if (m) { resolved_shop_id = m.id; resolved_shop_name = m.name; }
@@ -88,12 +87,17 @@ export async function POST(req: NextRequest) {
       status = "error";
       issues.push("invalid shop selection");
     }
-    if (is_duplicate && status === "ok") { status = "skip"; issues.push("SKU already exists"); }
-    if (status === "ok" && seenInBatch.has(r.sku)) {
+
+    // Duplicate = same SKU already exists in the SAME shop
+    const dupKey = `${r.sku}:::${resolved_shop_id ?? ""}`;
+    const is_duplicate = resolved_shop_id ? existingByShop.has(dupKey) : false;
+
+    if (is_duplicate && status === "ok") { status = "skip"; issues.push("SKU already exists in this shop"); }
+    if (status === "ok" && seenInBatch.has(dupKey)) {
       status = "skip";
-      issues.push("duplicate SKU within this sheet");
+      issues.push("duplicate SKU for this shop within this sheet");
     } else if (status === "ok") {
-      seenInBatch.add(r.sku);
+      seenInBatch.add(dupKey);
     }
     return { ...r, is_duplicate, status, issues, resolved_shop_id, resolved_shop_name };
   });
