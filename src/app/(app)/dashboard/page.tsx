@@ -32,12 +32,7 @@ export default async function Dashboard() {
     supabase.from("pieces").select("id, sale_price, status"),
     supabase
       .from("sales")
-      .select(`
-        id, piece_id, net_price, gross_price, discount_pct, staff_commission_amount, sale_date, staff_id, shop_id,
-        profiles!staff_id (full_name),
-        shops!shop_id (name),
-        pieces!piece_id (sku, type)
-      `)
+      .select("id, piece_id, net_price, gross_price, discount_pct, staff_commission_amount, sale_date, staff_id, shop_id, profiles!staff_id(full_name), shops!shop_id(name), pieces!piece_id(sku, type)")
       .gte("sale_date", yearStart)
       .order("sale_date", { ascending: false }),
     isOwner ? supabase.from("movements").select("id").eq("approval_status", "pending") : Promise.resolve({ data: [] }),
@@ -45,6 +40,7 @@ export default async function Dashboard() {
   ]);
 
   const pieces = piecesRes.data ?? [];
+  if (salesRes.error) console.error("sales query error", salesRes.error);
   const sales = (salesRes.data ?? []) as unknown as SaleRow[];
   const pendingMoves = (pendingMovesRes.data ?? []) as { id: string }[];
   const pendingDiscounts = (pendingDiscountsRes.data ?? []) as { id: string }[];
