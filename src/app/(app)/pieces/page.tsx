@@ -82,7 +82,7 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
   // Build query — RLS handles shop scoping; UI filters are just helpers.
   let query = supabase
     .from("pieces")
-    .select("id, sku, description, type, metal, karat, main_stone, ctw, sale_price, status, current_shop_id, shops!current_shop_id(name)")
+    .select("id, sku, description, type, metal, karat, main_stone, ctw, sale_price, quantity, status, current_shop_id, shops!current_shop_id(name)")
     .order(col, { ascending: asc })
     .limit(250);
 
@@ -210,6 +210,7 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
                     Price <SortArrow sp={searchParams} ascKey="price_asc" descKey="price_desc" />
                   </Link>
                 </th>
+                <th className="text-right px-3 py-2 font-medium">Qty</th>
                 <th className="text-left px-3 py-2 font-medium">Shop</th>
                 <th className="text-left px-3 py-2">
                   <Link href={sortHref(searchParams, "status_asc", "status_desc")} className="group inline-flex items-center font-medium hover:text-neutral-900 dark:hover:text-neutral-100 whitespace-nowrap">
@@ -233,6 +234,9 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
                       <td className="px-3 py-2 whitespace-nowrap text-xs text-neutral-500">{metalLabel || "—"}</td>
                       <td className="px-3 py-2 text-right tabular-nums text-xs">{p.ctw ?? "—"}</td>
                       <td className="px-3 py-2 text-right tabular-nums font-medium">{money(p.sale_price)}</td>
+                      <td className="px-3 py-2 text-right tabular-nums text-xs">
+                        {(p as unknown as { quantity: number }).quantity ?? 1}
+                      </td>
                       <td className="px-3 py-2 text-xs text-neutral-500 whitespace-nowrap">{shopName ?? "—"}</td>
                       <td className="px-3 py-2">
                         <StatusBadge status={p.status as PieceStatus} />

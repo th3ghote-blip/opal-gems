@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
   const [pieceRes, settingsRes, staffRes] = await Promise.all([
     admin
       .from("pieces")
-      .select("id, sku, type, sale_price, current_shop_id, status, shops!current_shop_id(name)")
+      .select("id, sku, type, sale_price, quantity, current_shop_id, status, shops!current_shop_id(name)")
       .eq("id", data.piece_id)
       .single(),
     admin
@@ -120,8 +120,12 @@ export async function POST(req: NextRequest) {
     .single();
   if (saleErr) return NextResponse.json({ error: saleErr.message }, { status: 500 });
 
-  // Mark piece sold.
-  await admin.from("pieces").update({ status: "sold" }).eq("id", data.piece_id);
+  // Decrement quantity. Flip to 'sold' only when stock hits 0.
+  const newQty = Math.max(0, (piece.quantity ?? 1) - 1);
+  await admin.from("pieces").update({
+    quantity: newQty,
+    ...(newQty === 0 ? { status: "sold" } : {}),
+  }).eq("id", data.piece_id);
 
   // Fire owner FYI notification.
   const shop = (piece.shops as unknown as { name: string } | null) ?? null;

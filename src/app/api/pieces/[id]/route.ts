@@ -20,6 +20,7 @@ const body = z.object({
   description: z.string().nullable().optional(),
   original_price: z.number(),
   sale_price: z.number(),
+  quantity: z.number().int().min(0).default(1),
   cost: z.number().nullable().optional(),
   current_shop_id: z.string().uuid().nullable().optional(),
   status: z.enum(["in_stock", "reserved", "sold", "in_transit", "written_off"]),
@@ -59,6 +60,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     description: data.description ?? null,
     original_price: data.original_price,
     sale_price: data.sale_price,
+    quantity: data.quantity,
     current_shop_id: data.current_shop_id ?? null,
     status: data.status,
   };

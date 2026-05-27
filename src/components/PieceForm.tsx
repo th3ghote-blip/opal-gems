@@ -28,6 +28,7 @@ export interface PieceFormInitial {
   cost?: number | null;       // only when isOwner
   original_price?: number;
   sale_price?: number;
+  quantity?: number;
   current_shop_id?: string | null;
   status?: string;
   tags?: string[];
@@ -95,6 +96,7 @@ export function PieceForm({ initial = {}, shops, enums, isOwner, mode }: Props) 
       width_mm: numOrNull(fd.get("width_mm")),
       ring_size: numOrNull(fd.get("ring_size")),
       description: nullable(fd.get("description")),
+      quantity: Math.max(1, parseInt(String(fd.get("quantity") ?? "1"), 10) || 1),
       original_price: numOrNull(fd.get("original_price")),
       // New pieces haven't been sold yet — sale price starts equal to original price.
       // It gets updated properly when a sale is recorded through the sell flow.
@@ -140,6 +142,16 @@ export function PieceForm({ initial = {}, shops, enums, isOwner, mode }: Props) 
         </Field>
         <Field label="Type" required>
           <Select name="type" required defaultValue={initial.type ?? ""} options={enums.type} />
+        </Field>
+        <Field label="Quantity">
+          <input
+            type="number"
+            name="quantity"
+            min={1}
+            step={1}
+            defaultValue={initial.quantity ?? 1}
+            className={inputCls}
+          />
         </Field>
         <Field label="Status">
           <select name="status" defaultValue={initial.status ?? "in_stock"} className={inputCls}>
