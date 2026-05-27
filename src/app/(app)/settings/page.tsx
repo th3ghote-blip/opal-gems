@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient, getCurrentProfile } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { SettingsTab } from "./settings-tab";
 import { StaffTab } from "./staff-tab";
 import { ShopsTab } from "./shops-tab";
@@ -17,12 +18,21 @@ export default async function SettingsPage({ searchParams }: Props) {
   const tab = searchParams.tab ?? "settings";
   const supabase = createClient();
 
-  const [{ data: settings }, { data: shops }, { data: profiles }, { data: profileShopsRaw }] = await Promise.all([
+  const admin = createAdminClient();
+
+  const [{ data: settings }, { data: shops }, { data: profiles }, { data: profileShopsRaw }, authUsers] = await Promise.all([
     supabase.from("settings").select("key, value").order("key"),
     supabase.from("shops").select("id, name, hotel_name, address, manager_id, hotel_commission_pct, sales_tax_pct, active").order("name"),
     supabase.from("profiles").select("id, full_name, role, default_shop_id, commission_pct, active, phone").order("full_name"),
     supabase.from("profile_shops").select("profile_id, shop_id"),
+    admin.auth.admin.listUsers({ perPage: 200 }),
   ]);
+
+  // Build email map from auth.users
+  const emailById: Record<string, string> = {};
+  for (const u of authUsers.data?.users ?? []) {
+    emailById[u.id] = u.email ?? "";
+  }
 
   // Build shop_ids map: profile_id → shop_id[]
   const shopIdsByProfile: Record<string, string[]> = {};
@@ -33,6 +43,7 @@ export default async function SettingsPage({ searchParams }: Props) {
   const profilesWithShops = (profiles ?? []).map((p) => ({
     ...p,
     shop_ids: shopIdsByProfile[p.id] ?? [],
+    email: emailById[p.id] ?? "",
   }));
 
   return (

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 interface Profile {
   id: string;
   full_name: string;
+  email: string;
   role: "owner" | "manager" | "staff";
   default_shop_id: string | null;
   shop_ids: string[];
@@ -47,6 +48,7 @@ export function StaffTab({ profiles, shops }: { profiles: Profile[]; shops: Shop
           <thead className="text-xs text-neutral-500 bg-neutral-50 dark:bg-neutral-900">
             <tr>
               <th className="text-left px-3 py-2">Name</th>
+              <th className="text-left px-3 py-2">Email</th>
               <th className="text-left px-3 py-2">Role</th>
               <th className="text-left px-3 py-2">Shops</th>
               <th className="text-left px-3 py-2">Comm %</th>
@@ -86,6 +88,7 @@ function ProfileRow({
   return (
     <tr className="border-t border-neutral-200 dark:border-neutral-800">
       <td className="px-3 py-2 font-medium">{p.full_name}</td>
+      <td className="px-3 py-2 text-xs text-neutral-500">{p.email || "—"}</td>
 
       {/* Role */}
       <td className="px-3 py-2">
