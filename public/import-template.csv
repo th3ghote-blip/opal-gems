@@ -1,0 +1,4 @@
+SKU,NAME,TYPE,METAL,KARAT,CTW,PRICE,QUANTITY,LOCATION,STATUS
+DM-001,Diamond Solitaire Ring,Ring,White Gold,18k,1.50,3500,1,Jupiter,in_stock
+DM-002,Pearl Tennis Bracelet,Bracelet,Yellow Gold,14k,,1200,2,Clearwater Beach,in_stock
+DM-003,Diamond Stud Earrings,Earrings,White Gold,14k,0.50,850,1,Opal Grande,in_stock

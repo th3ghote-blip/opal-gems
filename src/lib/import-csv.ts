@@ -148,6 +148,7 @@ export interface ParsedRow {
   location?: string | null;        // raw LOCATION string from sheet, if any
   image_url?: string | null;
   // Bookkeeping
+  quantity: number;
   certification: boolean;
   stock: number;
   total: number;
@@ -166,17 +167,20 @@ function isHeaderFormatB(row: string[]): boolean {
   const j = row.map((c) => c.trim().toUpperCase());
   return j.includes("IMAGE") && j.includes("GOLD") && j.includes("DIAMOND") && j.includes("LOCATION");
 }
+/** Format C — universal template: SKU + NAME + TYPE + PRICE (named columns, any order). */
+function isHeaderFormatC(row: string[]): boolean {
+  const j = row.map((c) => c.trim().toUpperCase());
+  return j.includes("SKU") && j.includes("NAME") && j.includes("TYPE") && j.includes("PRICE");
+}
 
-/** Smart dispatcher — detects Format A (SKU/NAME/CATEGORY/CTW/PRICE/STOCK/...)
- *  vs Format B (IMAGE/NOTE/NAME/.../SKU/CTW/GOLD/DIAMOND/NEW PRICE/QTY/LOCATION/...).
- *  Falls back to A. */
+/** Smart dispatcher — tries C (universal) → B → A. Falls back to A. */
 export function parseInventoryCsv(text: string): ParsedRow[] {
   const rows = parseCSV(text);
   for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    if (isHeaderFormatC(rows[i])) return parseFormatC(rows, i);
     if (isHeaderFormatB(rows[i])) return parseFormatB(rows, i);
     if (isHeaderFormatA(rows[i])) return parseFormatA(rows, i);
   }
-  // First row may be a broken Format A header (no recognizable column name in col 0)
   return parseFormatA(rows, isHeaderFormatA(rows[0] ?? []) ? 0 : -1);
 }
 
@@ -212,6 +216,7 @@ function parseFormatA(rows: string[][], headerIdx: number): ParsedRow[] {
       type: normalizedType ?? "",
       ctw: parsedCtw,
       price: parsedPrice,
+      quantity: 1,
       certification: (certification ?? "").trim().toUpperCase() === "TRUE",
       stock: Number.isFinite(parseInt(stock ?? "", 10)) ? parseInt(stock ?? "", 10) : 0,
       total: Number.isFinite(parsedTotal) ? parsedTotal : 0,
@@ -285,9 +290,78 @@ function parseFormatB(rows: string[][], headerIdx: number): ParsedRow[] {
       clarity: diamond.clarity,
       location,
       image_url: (r[idx.image] ?? "").trim() || null,
+      quantity: 1,
       certification: false,
       stock: 1,
       total: 1,
+      raw: Object.fromEntries(header.map((h, j) => [h, r[j] ?? ""])),
+      issues,
+      status,
+      status_override,
+    });
+  }
+  return out;
+}
+
+// ---------- Format C — Universal template (named columns, any order) ----------
+// Headers: SKU, NAME, TYPE, METAL, KARAT, CTW, PRICE, QUANTITY, LOCATION, STATUS
+function parseFormatC(rows: string[][], headerIdx: number): ParsedRow[] {
+  const header = rows[headerIdx].map((c) => c.trim().toUpperCase());
+  const col = (name: string) => header.indexOf(name);
+  const idx = {
+    sku:      col("SKU"),
+    name:     col("NAME"),
+    type:     col("TYPE"),
+    metal:    col("METAL"),
+    karat:    col("KARAT"),
+    ctw:      col("CTW"),
+    price:    col("PRICE"),
+    quantity: col("QUANTITY"),
+    location: col("LOCATION"),
+    status:   col("STATUS"),
+  };
+
+  const out: ParsedRow[] = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const r = rows[i];
+    const get = (n: keyof typeof idx) => (idx[n] >= 0 ? (r[idx[n]] ?? "").trim() : "");
+
+    const sku      = get("sku");
+    const name     = get("name");
+    const typeRaw  = get("type");
+    const price    = parsePrice(get("price"));
+    const ctw      = parseCtw(get("ctw"));
+    const location = get("location") || null;
+    const type     = normalizeType(typeRaw) ?? extractTypeFromName(name) ?? "";
+    const metal    = get("metal") || null;
+    const karat    = get("karat") || null;
+    const qtyRaw   = get("quantity");
+    const quantity = qtyRaw ? Math.max(1, parseInt(qtyRaw, 10) || 1) : 1;
+    const statusRaw = get("status").toLowerCase();
+    const status_override: "sold" | null = statusRaw === "sold" ? "sold" : null;
+
+    const issues: string[] = [];
+    let status: ParsedRow["status"] = "ok";
+    if (!sku)                          { status = "error"; issues.push("missing SKU"); }
+    if (!name)                         { status = "error"; issues.push("missing name"); }
+    if (!type)                         { status = "error"; issues.push("missing or unrecognised type"); }
+    if (price == null || price <= 0)   { status = "error"; issues.push("invalid price"); }
+    if (status_override === "sold") issues.push("imported as sold");
+
+    out.push({
+      sku,
+      description: name,
+      type,
+      ctw,
+      price,
+      metal,
+      karat,
+      main_stone: null,
+      location,
+      quantity,
+      certification: false,
+      stock: quantity,
+      total: quantity,
       raw: Object.fromEntries(header.map((h, j) => [h, r[j] ?? ""])),
       issues,
       status,

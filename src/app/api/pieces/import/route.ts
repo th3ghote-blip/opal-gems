@@ -123,6 +123,7 @@ export async function POST(req: NextRequest) {
       clarity: r.clarity ?? null,
       original_price: r.price ?? 0,
       sale_price: r.price ?? 0,
+      quantity: r.quantity ?? 1,
       current_shop_id: r.resolved_shop_id,
       status: (r.status_override ?? "in_stock") as "in_stock" | "sold",
       created_by: profile.id,
