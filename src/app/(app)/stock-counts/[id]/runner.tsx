@@ -74,23 +74,28 @@ export function CountRunner({
   }
 
   const total = pieces.length;
-  const counted = pieces.filter((p) => found.has(p.id)).length;
+  const ticked = pieces.filter((p) => found.get(p.id) === true).length;
   const missing = pieces.filter((p) => found.get(p.id) === false).length;
+  const unchecked = total - ticked - missing;
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2 text-sm">
+      <div className="grid grid-cols-4 gap-2 text-sm">
         <div className="rounded-md border border-neutral-200 dark:border-neutral-800 p-2 text-center">
           <div className="text-xs text-neutral-500">Expected</div>
           <div className="text-base font-semibold">{total}</div>
         </div>
         <div className="rounded-md border border-neutral-200 dark:border-neutral-800 p-2 text-center">
-          <div className="text-xs text-neutral-500">Counted</div>
-          <div className="text-base font-semibold">{counted}</div>
+          <div className="text-xs text-neutral-500">Present</div>
+          <div className="text-base font-semibold text-emerald-600">{ticked}</div>
         </div>
         <div className="rounded-md border border-neutral-200 dark:border-neutral-800 p-2 text-center">
           <div className="text-xs text-neutral-500">Missing</div>
-          <div className={`text-base font-semibold ${missing > 0 ? "text-amber-600" : ""}`}>{missing}</div>
+          <div className={`text-base font-semibold ${missing > 0 ? "text-red-600" : ""}`}>{missing}</div>
+        </div>
+        <div className="rounded-md border border-neutral-200 dark:border-neutral-800 p-2 text-center">
+          <div className="text-xs text-neutral-500">Unchecked</div>
+          <div className={`text-base font-semibold ${unchecked > 0 ? "text-amber-600" : ""}`}>{unchecked}</div>
         </div>
       </div>
 
