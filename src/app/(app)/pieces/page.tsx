@@ -161,9 +161,18 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
 
       <PiecesFilters shops={shops ?? []} types={types ?? []} view={effectiveView} />
 
-      <p className="text-sm text-neutral-500">
-        {pieces?.length ?? 0} {pieces?.length === 1 ? "piece" : "pieces"}
-      </p>
+      {(() => {
+        const records = pieces?.length ?? 0;
+        const totalUnits = (pieces ?? []).reduce((sum, p) => sum + ((p as { quantity?: number }).quantity ?? 1), 0);
+        return (
+          <p className="text-sm text-neutral-500">
+            {totalUnits} {totalUnits === 1 ? "unit" : "units"}
+            {totalUnits !== records && (
+              <span className="ml-1 text-neutral-400">({records} unique {records === 1 ? "piece" : "pieces"})</span>
+            )}
+          </p>
+        );
+      })()}
 
       {error && <p className="text-sm text-red-600">{error.message}</p>}
 
