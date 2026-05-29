@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getCurrentProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logActivity } from "@/lib/activity";
 
 const body = z.object({
   email: z.string().email(),
@@ -54,6 +55,14 @@ export async function POST(req: NextRequest) {
       .insert(shop_ids.map((shop_id) => ({ profile_id: userId, shop_id })));
     if (sErr) return NextResponse.json({ error: sErr.message }, { status: 500 });
   }
+
+  logActivity({
+    profile_id: profile.id,
+    action: "staff_invited",
+    entity_type: "profile",
+    entity_id: userId,
+    details: { full_name, email, role },
+  });
 
   return NextResponse.json({ id: userId });
 }

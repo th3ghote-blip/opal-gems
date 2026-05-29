@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getCurrentProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logActivity } from "@/lib/activity";
 
 const body = z.object({
   sku: z.string().min(1),
@@ -83,6 +84,15 @@ export async function POST(req: NextRequest) {
       data.new_photo_paths.map((storage_path, idx) => ({ piece_id: pieceId, storage_path, sort_order: idx }))
     );
   }
+
+  logActivity({
+    profile_id: profile.id,
+    action: "piece_added",
+    entity_type: "piece",
+    entity_id: pieceId,
+    shop_id: data.current_shop_id ?? null,
+    details: { sku: data.sku, type: data.type, price: data.sale_price, qty: data.quantity },
+  });
 
   return NextResponse.json({ id: pieceId });
 }

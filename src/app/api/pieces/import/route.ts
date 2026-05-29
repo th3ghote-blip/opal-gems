@@ -3,6 +3,7 @@ import { z } from "zod";
 import { getCurrentProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { parseInventoryCsv, googleSheetsCsvUrl, type ParsedRow } from "@/lib/import-csv";
+import { logActivity } from "@/lib/activity";
 
 const body = z.object({
   source: z.enum(["url", "csv"]),
@@ -144,5 +145,11 @@ export async function POST(req: NextRequest) {
     if (error) return NextResponse.json({ error: `Insert failed at chunk ${i}: ${error.message}`, inserted }, { status: 500 });
     inserted += count ?? chunk.length;
   }
+  logActivity({
+    profile_id: profile.id,
+    action: "pieces_imported",
+    details: { inserted, source: data.source, shop_id: data.shop_id },
+  });
+
   return NextResponse.json({ preview, summary, inserted });
 }

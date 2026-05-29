@@ -4,6 +4,7 @@ import { getCurrentProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { signApprovalToken } from "@/lib/approval-tokens";
 import { notifyOwner } from "@/lib/notifications";
+import { logActivity } from "@/lib/activity";
 
 const body = z.object({
   piece_id: z.string().uuid(),
@@ -153,6 +154,15 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error("sale alert notify failed", e);
   }
+
+  logActivity({
+    profile_id: profile.id,
+    action: "sale_recorded",
+    entity_type: "sale",
+    entity_id: sale.id,
+    shop_id: piece.current_shop_id,
+    details: { sku: piece.sku, type: piece.type, net_price: netPrice, discount_pct: data.discount_pct, qty: qtySold, shop: shop?.name },
+  });
 
   return NextResponse.json({ kind: "sale", id: sale.id });
 }

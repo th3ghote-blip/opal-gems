@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getCurrentProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logActivity } from "@/lib/activity";
 
 const body = z.object({ shop_id: z.string().uuid() });
 
@@ -34,6 +35,15 @@ export async function POST(req: NextRequest) {
       expected.map((p) => ({ count_id: count.id, piece_id: p.id, was_expected: true, was_found: false }))
     );
   }
+
+  logActivity({
+    profile_id: profile.id,
+    action: "stock_count_started",
+    entity_type: "stock_count",
+    entity_id: count.id,
+    shop_id: parsed.data.shop_id,
+    details: { shop_id: parsed.data.shop_id, expected: expected?.length ?? 0 },
+  });
 
   return NextResponse.json({ id: count.id });
 }

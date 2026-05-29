@@ -4,6 +4,7 @@ import { getCurrentProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { signApprovalToken } from "@/lib/approval-tokens";
 import { notifyOwner } from "@/lib/notifications";
+import { logActivity } from "@/lib/activity";
 
 const body = z.object({
   piece_id: z.string().uuid(),
@@ -63,6 +64,15 @@ export async function POST(req: NextRequest) {
   } catch (e) {
     console.error("notify failed", e);
   }
+
+  logActivity({
+    profile_id: profile.id,
+    action: "movement_requested",
+    entity_type: "movement",
+    entity_id: mov.id,
+    shop_id: data.from_shop_id ?? data.to_shop_id ?? null,
+    details: { piece_id: data.piece_id, movement_type: data.movement_type, from_shop_id: data.from_shop_id, to_shop_id: data.to_shop_id },
+  });
 
   return NextResponse.json({ id: mov.id });
 }

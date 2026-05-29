@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getCurrentProfile } from "@/lib/supabase/server";
 import { applyMovementDecision } from "@/lib/movements";
+import { logActivity } from "@/lib/activity";
 
 const body = z.object({ decision: z.enum(["approved", "denied", "cancelled"]) });
 
@@ -15,6 +16,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   try {
     await applyMovementDecision(params.id, parsed.data.decision, profile.id);
+    logActivity({
+      profile_id: profile.id,
+      action: `movement_${parsed.data.decision}`,
+      entity_type: "movement",
+      entity_id: params.id,
+      details: { decision: parsed.data.decision },
+    });
     return NextResponse.json({ ok: true });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });

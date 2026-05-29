@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { getCurrentProfile } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { logActivity } from "@/lib/activity";
 
 const body = z.object({
   staff_id: z.string().uuid(),
@@ -41,5 +42,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .eq("id", params.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const newStaff = staffRes.data as { commission_pct: number; full_name?: string } | null;
+  logActivity({
+    profile_id: profile.id,
+    action: "sale_reassigned",
+    entity_type: "sale",
+    entity_id: params.id,
+    details: { new_staff_id: parsed.data.staff_id },
+  });
+
   return NextResponse.json({ ok: true });
 }
