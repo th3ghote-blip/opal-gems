@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient, getCurrentProfile } from "@/lib/supabase/server";
+import { UserFilter } from "./user-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -89,23 +90,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: { u
           <p className="text-sm text-neutral-500">All user actions — most recent first</p>
         </div>
 
-        {/* User filter */}
-        <form method="GET" className="flex items-center gap-2">
-          <select
-            name="user"
-            defaultValue={searchParams.user ?? ""}
-            onChange={(e) => { (e.target.form as HTMLFormElement).submit(); }}
-            className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-3 py-1.5 text-sm"
-          >
-            <option value="">All users</option>
-            {(staff ?? []).map((s) => (
-              <option key={s.id} value={s.id}>{s.full_name}</option>
-            ))}
-          </select>
-          {searchParams.user && (
-            <a href="/activity" className="text-xs text-neutral-500 hover:underline">Clear</a>
-          )}
-        </form>
+        <UserFilter staff={staff ?? []} selected={searchParams.user ?? ""} />
       </header>
 
       {(!logs || logs.length === 0) ? (
