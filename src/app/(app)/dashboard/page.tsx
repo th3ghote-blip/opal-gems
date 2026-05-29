@@ -19,24 +19,32 @@ interface SaleRow {
   pieces: { sku: string; type: string } | null;
 }
 
-export default async function Dashboard() {
+export default async function Dashboard({ searchParams }: { searchParams: { shop?: string } }) {
   const profile = (await getCurrentProfile())!;
   const supabase = createClient();
   const isOwner = profile.role === "owner";
+  const shopFilter = searchParams.shop ?? null;
 
   // YTD window
   const now = new Date();
   const yearStart = new Date(now.getFullYear(), 0, 1).toISOString();
 
-  const [piecesRes, salesRes, pendingMovesRes, pendingDiscountsRes] = await Promise.all([
-    supabase.from("pieces").select("id, sale_price, status"),
-    supabase
-      .from("sales")
-      .select("id, piece_id, net_price, gross_price, discount_pct, staff_commission_amount, sale_date, staff_id, shop_id, profiles!staff_id(full_name), shops!shop_id(name), pieces!piece_id(sku, type)")
-      .gte("sale_date", yearStart)
-      .order("sale_date", { ascending: false }),
+  const [piecesRes, salesRes, pendingMovesRes, pendingDiscountsRes, shopsRes] = await Promise.all([
+    shopFilter
+      ? supabase.from("pieces").select("id, sale_price, status").eq("current_shop_id", shopFilter)
+      : supabase.from("pieces").select("id, sale_price, status"),
+    (() => {
+      let q = supabase
+        .from("sales")
+        .select("id, piece_id, net_price, gross_price, discount_pct, staff_commission_amount, sale_date, staff_id, shop_id, profiles!staff_id(full_name), shops!shop_id(name), pieces!piece_id(sku, type)")
+        .gte("sale_date", yearStart)
+        .order("sale_date", { ascending: false });
+      if (shopFilter) q = q.eq("shop_id", shopFilter);
+      return q;
+    })(),
     isOwner ? supabase.from("movements").select("id").eq("approval_status", "pending") : Promise.resolve({ data: [] }),
     isOwner ? supabase.from("discount_requests").select("id").eq("status", "pending") : Promise.resolve({ data: [] }),
+    supabase.from("shops").select("id, name").eq("active", true).order("name"),
   ]);
 
   const pieces = piecesRes.data ?? [];
@@ -44,6 +52,8 @@ export default async function Dashboard() {
   const sales = (salesRes.data ?? []) as unknown as SaleRow[];
   const pendingMoves = (pendingMovesRes.data ?? []) as { id: string }[];
   const pendingDiscounts = (pendingDiscountsRes.data ?? []) as { id: string }[];
+  const shops = (shopsRes.data ?? []) as { id: string; name: string }[];
+  const activeShop = shops.find((s) => s.id === shopFilter) ?? null;
 
   const inStock  = pieces.filter((p) => p.status === "in_stock").length;
   const reserved = pieces.filter((p) => p.status === "reserved").length;
@@ -94,9 +104,38 @@ export default async function Dashboard() {
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Home</h1>
         <p className="text-sm text-neutral-500">
-          {profile.full_name} · {profile.role} · YTD
+          {profile.full_name} · {profile.role} · YTD{activeShop ? ` · ${activeShop.name}` : ""}
         </p>
       </header>
+
+      {/* Shop switcher */}
+      {shops.length > 1 && (
+        <div className="flex flex-wrap gap-1.5">
+          <Link
+            href="/dashboard"
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              !shopFilter
+                ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
+                : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+            }`}
+          >
+            All shops
+          </Link>
+          {shops.map((s) => (
+            <Link
+              key={s.id}
+              href={`/dashboard?shop=${s.id}`}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                shopFilter === s.id
+                  ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
+                  : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+              }`}
+            >
+              {s.name}
+            </Link>
+          ))}
+        </div>
+      )}
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Stat label="In stock"           value={inStock} />

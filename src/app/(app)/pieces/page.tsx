@@ -138,12 +138,7 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
   return (
     <div className="space-y-4">
       <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Pieces
-          {pieces && pieces.length > 0 && (
-            <span className="ml-2 text-base font-normal text-neutral-400">{pieces.length}</span>
-          )}
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Pieces</h1>
         <div className="flex gap-2">
           {profile.role === "owner" && (
             <Link
@@ -165,6 +160,10 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
       </header>
 
       <PiecesFilters shops={shops ?? []} types={types ?? []} view={effectiveView} />
+
+      <p className="text-sm text-neutral-500">
+        {pieces?.length ?? 0} {pieces?.length === 1 ? "piece" : "pieces"}
+      </p>
 
       {error && <p className="text-sm text-red-600">{error.message}</p>}
 
