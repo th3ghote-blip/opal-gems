@@ -31,8 +31,8 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
 
   const [piecesRes, salesRes, pendingMovesRes, pendingDiscountsRes, shopsRes] = await Promise.all([
     shopFilter
-      ? supabase.from("pieces").select("id, sale_price, status").eq("current_shop_id", shopFilter)
-      : supabase.from("pieces").select("id, sale_price, status"),
+      ? supabase.from("pieces").select("id, sale_price, quantity, status").eq("current_shop_id", shopFilter)
+      : supabase.from("pieces").select("id, sale_price, quantity, status"),
     (() => {
       let q = supabase
         .from("sales")
@@ -55,11 +55,11 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
   const shops = (shopsRes.data ?? []) as { id: string; name: string }[];
   const activeShop = shops.find((s) => s.id === shopFilter) ?? null;
 
-  const inStock  = pieces.filter((p) => p.status === "in_stock").length;
-  const reserved = pieces.filter((p) => p.status === "reserved").length;
+  const inStock  = pieces.filter((p) => p.status === "in_stock") .reduce((sum, p) => sum + (p.quantity ?? 1), 0);
+  const reserved = pieces.filter((p) => p.status === "reserved") .reduce((sum, p) => sum + (p.quantity ?? 1), 0);
   const inventoryRetail = pieces
     .filter((p) => p.status === "in_stock" || p.status === "reserved")
-    .reduce((sum, p) => sum + Number(p.sale_price ?? 0), 0);
+    .reduce((sum, p) => sum + Number(p.sale_price ?? 0) * (p.quantity ?? 1), 0);
 
   // Aggregate sales
   const totalRevenue = sales.reduce((s, x) => s + Number(x.net_price ?? 0), 0);
