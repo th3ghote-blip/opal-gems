@@ -242,10 +242,9 @@ export function SellForm({
         )}
 
         <div className="grid grid-cols-2 gap-3 text-sm">
-          <Stat label="Tag price"     value={fmt(grossPrice)} />
-          <Stat label="Net price"     value={fmt(netPrice)} accent={overThreshold ? "amber" : undefined} />
-          <Stat label="Commission %"  value={`${commissionPct}%`} />
-          <Stat label="Commission $"  value={fmt(commissionAmount)} />
+          <Stat label="Tag price"    value={fmt(grossPrice)} />
+          <Stat label="Commission %" value={`${commissionPct}%`} />
+          <Stat label="Commission $" value={fmt(commissionAmount)} />
           {multiQty && qtySold > 1 && (
             <>
               <Stat label={`Total (×${qtySold})`} value={fmt(netPrice * qtySold)} accent={overThreshold ? "amber" : undefined} />
@@ -254,17 +253,39 @@ export function SellForm({
           )}
         </div>
 
-        <div>
-          <label className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">Discount %</label>
-          <input
-            type="number"
-            step="0.5"
-            min="0"
-            max="100"
-            value={discountPct}
-            onChange={(e) => setDiscountPct(Number(e.target.value) || 0)}
-            className={inputCls}
-          />
+        {/* Dual pricing inputs — edit either, the other updates */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">
+              Net price ($) {overThreshold && <span className="text-amber-600 font-medium">⚠ approval needed</span>}
+            </label>
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              max={grossPrice}
+              value={netPrice}
+              onChange={(e) => {
+                const net = Math.min(grossPrice, Math.max(0, Number(e.target.value) || 0));
+                const pct = grossPrice > 0 ? +((1 - net / grossPrice) * 100).toFixed(2) : 0;
+                setDiscountPct(pct);
+              }}
+              className={`${inputCls} ${overThreshold ? "border-amber-400" : ""}`}
+            />
+          </div>
+          <div>
+            <label className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">Discount %</label>
+            <input
+              type="number"
+              step="0.5"
+              min="0"
+              max="100"
+              value={discountPct}
+              onChange={(e) => setDiscountPct(Math.min(100, Math.max(0, Number(e.target.value) || 0)))}
+              className={inputCls}
+            />
+          </div>
+        </div>
           {overThreshold && !isOwner && (
             <p className="mt-1 text-xs text-amber-600">
               Above {maxNoApprovalDiscount}% — requires owner approval. Sale will queue as a request.
