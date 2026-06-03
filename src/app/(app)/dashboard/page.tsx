@@ -19,20 +19,29 @@ interface SaleRow {
   pieces: { sku: string; type: string } | null;
 }
 
-export default async function Dashboard({ searchParams }: { searchParams: { shop?: string } }) {
+function isMisc(sku: string | null | undefined) {
+  if (!sku || !sku.trim()) return true;
+  return sku.trim().toLowerCase() === "misc" || sku.trim().toLowerCase().startsWith("misc");
+}
+
+export default async function Dashboard({ searchParams }: { searchParams: { shop?: string; misc?: string } }) {
   const profile = (await getCurrentProfile())!;
   const supabase = createClient();
   const isOwner = profile.role === "owner";
   const shopFilter = searchParams.shop ?? null;
+  const includeMisc = searchParams.misc === "1";
 
   // YTD window
   const now = new Date();
   const yearStart = new Date(now.getFullYear(), 0, 1).toISOString();
 
   const [piecesRes, salesRes, pendingMovesRes, pendingDiscountsRes, shopsRes] = await Promise.all([
-    shopFilter
-      ? supabase.from("pieces").select("id, sale_price, quantity, status").eq("current_shop_id", shopFilter)
-      : supabase.from("pieces").select("id, sale_price, quantity, status"),
+    (() => {
+      let q = supabase.from("pieces").select("id, sku, sale_price, quantity, status");
+      if (shopFilter) q = q.eq("current_shop_id", shopFilter);
+      if (!includeMisc) q = q.not("sku", "ilike", "misc%").not("sku", "is", null);
+      return q;
+    })(),
     (() => {
       let q = supabase
         .from("sales")
@@ -49,7 +58,10 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
 
   const pieces = piecesRes.data ?? [];
   if (salesRes.error) console.error("sales query error", salesRes.error);
-  const sales = (salesRes.data ?? []) as unknown as SaleRow[];
+  const allSales = (salesRes.data ?? []) as unknown as SaleRow[];
+  const sales = includeMisc
+    ? allSales
+    : allSales.filter((s) => !isMisc((s.pieces as { sku?: string } | null)?.sku));
   const pendingMoves = (pendingMovesRes.data ?? []) as { id: string }[];
   const pendingDiscounts = (pendingDiscountsRes.data ?? []) as { id: string }[];
   const shops = (shopsRes.data ?? []) as { id: string; name: string }[];
@@ -108,11 +120,11 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
         </p>
       </header>
 
-      {/* Shop switcher */}
+      {/* Shop switcher + misc toggle */}
       {shops.length > 1 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 items-center">
           <Link
-            href="/dashboard"
+            href={includeMisc ? "/dashboard?misc=1" : "/dashboard"}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               !shopFilter
                 ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
@@ -124,7 +136,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
           {shops.map((s) => (
             <Link
               key={s.id}
-              href={`/dashboard?shop=${s.id}`}
+              href={`/dashboard?shop=${s.id}${includeMisc ? "&misc=1" : ""}`}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 shopFilter === s.id
                   ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
@@ -134,6 +146,22 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
               {s.name}
             </Link>
           ))}
+
+          <span className="w-px h-5 bg-neutral-300 dark:bg-neutral-700 mx-1" />
+
+          <Link
+            href={shopFilter
+              ? (includeMisc ? `/dashboard?shop=${shopFilter}` : `/dashboard?shop=${shopFilter}&misc=1`)
+              : (includeMisc ? "/dashboard" : "/dashboard?misc=1")
+            }
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              includeMisc
+                ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
+                : "bg-neutral-100 dark:bg-neutral-800 text-neutral-500 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+            }`}
+          >
+            {includeMisc ? "Misc included" : "+ Include misc"}
+          </Link>
         </div>
       )}
 
