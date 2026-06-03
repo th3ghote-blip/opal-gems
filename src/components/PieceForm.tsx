@@ -216,7 +216,7 @@ export function PieceForm({ initial = {}, shops, enums, isOwner, mode }: Props) 
               type="number"
               step="0.01"
               name="sale_price"
-              defaultValue={initial.sale_price ?? ""}
+              defaultValue={initial.sale_price ?? initial.original_price ?? ""}
               className={inputCls}
             />
           </Field>
