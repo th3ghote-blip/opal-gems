@@ -85,6 +85,9 @@ export function PiecesFilters({ shops, types, view: viewProp }: { shops: Shop[];
         />
         <select value={params.get("shop") ?? ""}   onChange={(e) => pushWith({ shop: e.target.value })}   className={inputCls}>
           <option value="">All shops</option>
+          {shops.filter((s) => s.name.toLowerCase().startsWith("jupiter")).length > 1 && (
+            <option value="jupiter_all">Jupiter (all)</option>
+          )}
           {shops.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
         <select value={params.get("type") ?? ""}   onChange={(e) => pushWith({ type: e.target.value })}   className={inputCls}>

@@ -28,17 +28,24 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
   const profile = (await getCurrentProfile())!;
   const supabase = createClient();
   const isOwner = profile.role === "owner";
-  const shopFilter = searchParams.shop ?? null;
-  const includeMisc = searchParams.misc === "1";
+  const shopFilter   = searchParams.shop ?? null;
+  const includeMisc  = searchParams.misc === "1";
+  const isJupiterAll = shopFilter === "jupiter_all";
 
   // YTD window
   const now = new Date();
   const yearStart = new Date(now.getFullYear(), 0, 1).toISOString();
 
-  const [piecesRes, salesRes, pendingMovesRes, pendingDiscountsRes, shopsRes] = await Promise.all([
+  // Shops must resolve first so jupiterIds is available for piece/sales filters
+  const { data: shopsData } = await supabase.from("shops").select("id, name").eq("active", true).order("name");
+  const shops = (shopsData ?? []) as { id: string; name: string }[];
+  const jupiterIds = shops.filter((s) => s.name.toLowerCase().startsWith("jupiter")).map((s) => s.id);
+
+  const [piecesRes, salesRes, pendingMovesRes, pendingDiscountsRes] = await Promise.all([
     (() => {
       let q = supabase.from("pieces").select("id, sku, sale_price, quantity, status");
-      if (shopFilter) q = q.eq("current_shop_id", shopFilter);
+      if (isJupiterAll && jupiterIds.length) q = q.or(jupiterIds.map((id) => `current_shop_id.eq.${id}`).join(","));
+      else if (shopFilter) q = q.eq("current_shop_id", shopFilter);
       if (!includeMisc) q = q.not("sku", "ilike", "misc%").not("sku", "is", null);
       return q;
     })(),
@@ -48,12 +55,12 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
         .select("id, piece_id, net_price, gross_price, discount_pct, staff_commission_amount, sale_date, staff_id, shop_id, profiles!staff_id(full_name), shops!shop_id(name), pieces!piece_id(sku, type)")
         .gte("sale_date", yearStart)
         .order("sale_date", { ascending: false });
-      if (shopFilter) q = q.eq("shop_id", shopFilter);
+      if (isJupiterAll && jupiterIds.length) q = q.or(jupiterIds.map((id) => `shop_id.eq.${id}`).join(","));
+      else if (shopFilter) q = q.eq("shop_id", shopFilter);
       return q;
     })(),
     isOwner ? supabase.from("movements").select("id").eq("approval_status", "pending") : Promise.resolve({ data: [] }),
     isOwner ? supabase.from("discount_requests").select("id").eq("status", "pending") : Promise.resolve({ data: [] }),
-    supabase.from("shops").select("id, name").eq("active", true).order("name"),
   ]);
 
   const pieces = piecesRes.data ?? [];
@@ -64,8 +71,8 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
     : allSales.filter((s) => !isMisc((s.pieces as { sku?: string } | null)?.sku));
   const pendingMoves = (pendingMovesRes.data ?? []) as { id: string }[];
   const pendingDiscounts = (pendingDiscountsRes.data ?? []) as { id: string }[];
-  const shops = (shopsRes.data ?? []) as { id: string; name: string }[];
-  const activeShop = shops.find((s) => s.id === shopFilter) ?? null;
+  const activeShop = isJupiterAll ? { id: "jupiter_all", name: "Jupiter (all)" }
+    : shops.find((s) => s.id === shopFilter) ?? null;
 
   const inStock  = pieces.filter((p) => p.status === "in_stock") .reduce((sum, p) => sum + (p.quantity ?? 1), 0);
   const reserved = pieces.filter((p) => p.status === "reserved") .reduce((sum, p) => sum + (p.quantity ?? 1), 0);
@@ -133,6 +140,19 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
           >
             All shops
           </Link>
+          {/* Jupiter (all) — shown only when there are 2+ Jupiter shops */}
+          {jupiterIds.length > 1 && (
+            <Link
+              href={`/dashboard?shop=jupiter_all${includeMisc ? "&misc=1" : ""}`}
+              className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                isJupiterAll
+                  ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
+                  : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+              }`}
+            >
+              Jupiter (all)
+            </Link>
+          )}
           {shops.map((s) => (
             <Link
               key={s.id}

@@ -79,6 +79,10 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
   };
   const { col, asc } = sortMap[searchParams.sort ?? ""] ?? sortMap.newest;
 
+  // Fetch shops first — needed to resolve jupiter_all filter before building pieces query
+  const { data: shopsData } = await supabase.from("shops").select("id, name").eq("active", true).order("name");
+  const shops = shopsData ?? [];
+
   // Build query — RLS handles shop scoping; UI filters are just helpers.
   let query = supabase
     .from("pieces")
@@ -89,7 +93,12 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
   if (searchParams.q) {
     query = query.or(`sku.ilike.%${searchParams.q}%,description.ilike.%${searchParams.q}%`);
   }
-  if (searchParams.shop)      query = query.eq("current_shop_id", searchParams.shop);
+  if (searchParams.shop === "jupiter_all") {
+    const jupiterIds = shops.filter((s) => s.name.toLowerCase().startsWith("jupiter")).map((s) => s.id);
+    if (jupiterIds.length) query = query.or(jupiterIds.map((id) => `current_shop_id.eq.${id}`).join(","));
+  } else if (searchParams.shop) {
+    query = query.eq("current_shop_id", searchParams.shop);
+  }
   if (searchParams.type)      query = query.eq("type", searchParams.type);
   // Default to in_stock; "all" param clears the filter
   const statusFilter = searchParams.status === "all" ? null : (searchParams.status ?? "in_stock");
@@ -101,10 +110,9 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
   if (searchParams.ctw_min)   query = query.gte("ctw", parseFloat(searchParams.ctw_min));
   if (searchParams.ctw_max)   query = query.lte("ctw", parseFloat(searchParams.ctw_max));
 
-  // Run pieces / shops / type-enum queries in parallel.
-  const [piecesRes, shopsRes, typesRes] = await Promise.all([
+  // Run pieces + type-enum queries in parallel (shops already fetched above)
+  const [piecesRes, typesRes] = await Promise.all([
     query,
-    supabase.from("shops").select("id, name").eq("active", true).order("name"),
     supabase
       .from("enum_values")
       .select("value")
@@ -113,7 +121,6 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
       .order("sort_order"),
   ]);
   const { data: pieces, error } = piecesRes;
-  const { data: shops } = shopsRes;
   const { data: types } = typesRes;
 
   // Photos depend on piece ids, so this one runs after.
