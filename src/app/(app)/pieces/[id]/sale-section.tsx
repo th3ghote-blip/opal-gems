@@ -40,7 +40,12 @@ export function SaleSection({
       </div>
       <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
         {sales.map((s) => (
-          <SaleRow key={s.id} sale={s} staffOptions={staffOptions} isOwner={isOwner} />
+          <SaleRow
+            key={`${s.id}-${s.net_price}-${s.sale_date}-${s.staff_id}`}
+            sale={s}
+            staffOptions={staffOptions}
+            isOwner={isOwner}
+          />
         ))}
       </div>
     </section>
