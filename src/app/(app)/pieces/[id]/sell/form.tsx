@@ -57,6 +57,7 @@ export function SellForm({
   const [discountPct, setDiscountPct] = useState(0);
   const [qtySold, setQtySold] = useState(1);
   const [staffId, setStaffId] = useState(currentUser.id);
+  const [saleDate, setSaleDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [customerQuery, setCustomerQuery] = useState("");
   const [customerResults, setCustomerResults] = useState<Customer[]>([]);
@@ -132,6 +133,7 @@ export function SellForm({
       staff_id: staffId,
       discount_pct: discountPct,
       qty_sold: qtySold,
+      sale_date: saleDate,
       payment_method: String(fd.get("payment_method") ?? "") || null,
       notes: String(fd.get("notes") ?? "").trim() || null,
       reason: String(fd.get("discount_reason") ?? "").trim() || null,
@@ -280,6 +282,15 @@ export function SellForm({
       <section className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-4 space-y-3">
         <div className="text-xs uppercase tracking-wide text-neutral-500">Details</div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Field label="Sale date">
+            <input
+              type="date"
+              value={saleDate}
+              max={new Date().toISOString().slice(0, 10)}
+              onChange={(e) => setSaleDate(e.target.value)}
+              className={inputCls}
+            />
+          </Field>
           <Field label="Salesperson">
             <select value={staffId} onChange={(e) => setStaffId(e.target.value)} className={inputCls}>
               {staff.map((s) => (

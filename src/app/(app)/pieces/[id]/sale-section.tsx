@@ -60,14 +60,13 @@ function SaleRow({
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
 
-  function changeStaff(newStaffId: string) {
-    if (newStaffId === sale.staff_id) return;
+  function patch(body: Record<string, string>) {
     setErr(null);
     start(async () => {
       const res = await fetch(`/api/sales/${sale.id}`, {
         method: "PATCH",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ staff_id: newStaffId }),
+        body: JSON.stringify(body),
       });
       const j = await res.json().catch(() => ({}));
       if (!res.ok) { setErr(j.error ?? `HTTP ${res.status}`); return; }
@@ -75,9 +74,17 @@ function SaleRow({
     });
   }
 
-  const date = new Date(sale.sale_date).toLocaleDateString("en-US", {
-    year: "numeric", month: "short", day: "numeric",
-  });
+  function changeStaff(newStaffId: string) {
+    if (newStaffId === sale.staff_id) return;
+    patch({ staff_id: newStaffId });
+  }
+
+  function changeDate(newDate: string) {
+    if (!newDate) return;
+    patch({ sale_date: newDate });
+  }
+
+  const dateValue = sale.sale_date.slice(0, 10);
   const discount = Number(sale.discount_pct);
 
   return (
@@ -97,7 +104,20 @@ function SaleRow({
               </span>
             )}
           </div>
-          <div className="text-xs text-neutral-500">{date}</div>
+          {isOwner ? (
+            <input
+              type="date"
+              defaultValue={dateValue}
+              max={new Date().toISOString().slice(0, 10)}
+              onBlur={(e) => changeDate(e.target.value)}
+              disabled={pending}
+              className="text-xs text-neutral-500 bg-transparent border-b border-dashed border-neutral-300 dark:border-neutral-600 focus:outline-none focus:border-neutral-500"
+            />
+          ) : (
+            <div className="text-xs text-neutral-500">
+              {new Date(sale.sale_date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
+            </div>
+          )}
         </div>
 
         {/* Seller */}

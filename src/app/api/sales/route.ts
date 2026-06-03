@@ -12,6 +12,7 @@ const body = z.object({
   staff_id: z.string().uuid(),
   discount_pct: z.number().min(0).max(100),
   qty_sold: z.number().int().min(1).default(1),
+  sale_date: z.string().optional(),   // ISO date string; defaults to now() if omitted
   payment_method: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   reason: z.string().nullable().optional(),
@@ -119,6 +120,7 @@ export async function POST(req: NextRequest) {
     staff_commission_amount: commissionAmount,
     payment_method: data.payment_method ?? null,
     notes: data.notes ?? null,
+    ...(data.sale_date ? { sale_date: data.sale_date } : {}),
   };
 
   // Insert one sale record per unit sold
