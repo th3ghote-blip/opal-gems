@@ -59,6 +59,8 @@ function SaleRow({
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  const [netPriceInput, setNetPriceInput] = useState(Number(sale.net_price));
+  const [dateInput, setDateInput] = useState(sale.sale_date.slice(0, 10));
 
   function patch(body: Record<string, string | number>) {
     setErr(null);
@@ -79,12 +81,16 @@ function SaleRow({
     patch({ staff_id: newStaffId });
   }
 
-  function changeDate(newDate: string) {
-    if (!newDate) return;
-    patch({ sale_date: newDate });
+  function saveDate(val: string) {
+    if (!val || val === sale.sale_date.slice(0, 10)) return;
+    patch({ sale_date: val });
   }
 
-  const dateValue = sale.sale_date.slice(0, 10);
+  function saveNetPrice(val: number) {
+    if (!val || val === Number(sale.net_price)) return;
+    patch({ net_price: val });
+  }
+
   const discount = Number(sale.discount_pct);
 
   return (
@@ -98,11 +104,9 @@ function SaleRow({
                 type="number"
                 step="0.01"
                 min="0"
-                defaultValue={Number(sale.net_price)}
-                onBlur={(e) => {
-                  const val = Number(e.target.value);
-                  if (val > 0 && val !== Number(sale.net_price)) patch({ net_price: val });
-                }}
+                value={netPriceInput}
+                onChange={(e) => setNetPriceInput(Number(e.target.value) || 0)}
+                onBlur={() => saveNetPrice(netPriceInput)}
                 disabled={pending}
                 className="w-28 font-semibold tabular-nums bg-transparent border-b border-dashed border-neutral-300 dark:border-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50"
               />
@@ -122,9 +126,10 @@ function SaleRow({
           {isOwner ? (
             <input
               type="date"
-              defaultValue={dateValue}
+              value={dateInput}
               max={new Date().toISOString().slice(0, 10)}
-              onBlur={(e) => changeDate(e.target.value)}
+              onChange={(e) => setDateInput(e.target.value)}
+              onBlur={() => saveDate(dateInput)}
               disabled={pending}
               className="text-xs text-neutral-500 bg-transparent border-b border-dashed border-neutral-300 dark:border-neutral-600 focus:outline-none focus:border-neutral-500"
             />
