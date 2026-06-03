@@ -7,6 +7,7 @@ import { logActivity } from "@/lib/activity";
 const body = z.object({
   staff_id: z.string().uuid().optional(),
   sale_date: z.string().optional(),
+  net_price: z.number().positive().optional(),
 });
 
 // Owner-only: reassign seller and/or change date on a sale.
@@ -25,18 +26,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     update.sale_date = parsed.data.sale_date;
   }
 
-  if (parsed.data.staff_id) {
+  // Load sale whenever staff or net_price is changing (need gross_price / commission_pct)
+  if (parsed.data.staff_id || parsed.data.net_price !== undefined) {
     const [saleRes, staffRes] = await Promise.all([
-      admin.from("sales").select("id, net_price").eq("id", params.id).single(),
-      admin.from("profiles").select("commission_pct").eq("id", parsed.data.staff_id).single(),
+      admin.from("sales").select("id, net_price, gross_price, staff_commission_pct, staff_id").eq("id", params.id).single(),
+      parsed.data.staff_id
+        ? admin.from("profiles").select("commission_pct").eq("id", parsed.data.staff_id).single()
+        : Promise.resolve({ data: null }),
     ]);
     if (!saleRes.data) return NextResponse.json({ error: "Sale not found" }, { status: 404 });
-    if (!staffRes.data) return NextResponse.json({ error: "Staff member not found" }, { status: 404 });
 
-    const commissionPct = Number(staffRes.data.commission_pct ?? 2);
-    update.staff_id = parsed.data.staff_id;
-    update.staff_commission_pct = commissionPct;
-    update.staff_commission_amount = +(Number(saleRes.data.net_price) * commissionPct / 100).toFixed(2);
+    const netPrice  = parsed.data.net_price ?? Number(saleRes.data.net_price);
+    const grossPrice = Number(saleRes.data.gross_price);
+    const commissionPct = staffRes.data
+      ? Number((staffRes.data as { commission_pct: number }).commission_pct ?? 2)
+      : Number(saleRes.data.staff_commission_pct ?? 2);
+
+    if (parsed.data.staff_id) update.staff_id = parsed.data.staff_id;
+    if (parsed.data.net_price !== undefined) {
+      update.net_price     = netPrice;
+      update.discount_pct  = grossPrice > 0 ? +((1 - netPrice / grossPrice) * 100).toFixed(2) : 0;
+    }
+    update.staff_commission_pct    = commissionPct;
+    update.staff_commission_amount = +(netPrice * commissionPct / 100).toFixed(2);
   }
 
   if (Object.keys(update).length === 0) {

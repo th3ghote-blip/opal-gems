@@ -60,7 +60,7 @@ function SaleRow({
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
 
-  function patch(body: Record<string, string>) {
+  function patch(body: Record<string, string | number>) {
     setErr(null);
     start(async () => {
       const res = await fetch(`/api/sales/${sale.id}`, {
@@ -90,14 +90,29 @@ function SaleRow({
   return (
     <div className="px-4 py-3 text-sm space-y-2">
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div className="space-y-0.5">
+        <div className="space-y-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-semibold tabular-nums">{money(sale.net_price)}</span>
-            {discount > 0 && (
-              <span className="text-xs text-neutral-500">
-                ({discount}% off {money(sale.gross_price)})
-              </span>
+            {/* Editable net price for owner */}
+            {isOwner ? (
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={Number(sale.net_price)}
+                onBlur={(e) => {
+                  const val = Number(e.target.value);
+                  if (val > 0 && val !== Number(sale.net_price)) patch({ net_price: val });
+                }}
+                disabled={pending}
+                className="w-28 font-semibold tabular-nums bg-transparent border-b border-dashed border-neutral-300 dark:border-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50"
+              />
+            ) : (
+              <span className="font-semibold tabular-nums">{money(sale.net_price)}</span>
             )}
+            <span className="text-xs text-neutral-500">
+              tag {money(sale.gross_price)}
+              {discount > 0 && ` · ${discount}% off`}
+            </span>
             {sale.payment_method && (
               <span className="text-xs px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800">
                 {sale.payment_method}
