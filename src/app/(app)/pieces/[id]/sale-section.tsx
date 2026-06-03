@@ -100,16 +100,27 @@ function SaleRow({
           <div className="flex items-center gap-2 flex-wrap">
             {/* Editable net price for owner */}
             {isOwner ? (
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={netPriceInput}
-                onChange={(e) => setNetPriceInput(Number(e.target.value) || 0)}
-                onBlur={() => saveNetPrice(netPriceInput)}
-                disabled={pending}
-                className="w-28 font-semibold tabular-nums bg-transparent border-b border-dashed border-neutral-300 dark:border-neutral-600 focus:outline-none focus:border-neutral-500 disabled:opacity-50"
-              />
+              <span className="flex items-center gap-1">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={netPriceInput}
+                  onChange={(e) => setNetPriceInput(Number(e.target.value) || 0)}
+                  disabled={pending}
+                  className="w-28 font-semibold tabular-nums bg-transparent border border-neutral-300 dark:border-neutral-600 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-neutral-400 disabled:opacity-50"
+                />
+                {netPriceInput !== Number(sale.net_price) && (
+                  <button
+                    type="button"
+                    disabled={pending}
+                    onClick={() => saveNetPrice(netPriceInput)}
+                    className="text-xs px-2 py-0.5 rounded bg-gold-600 hover:bg-gold-700 text-white disabled:opacity-50"
+                  >
+                    {pending ? "…" : "Save"}
+                  </button>
+                )}
+              </span>
             ) : (
               <span className="font-semibold tabular-nums">{money(sale.net_price)}</span>
             )}
