@@ -14,6 +14,7 @@ interface SaleRow {
   payment_method: string | null;
   notes: string | null;
   staff_id: string;
+  shop_id: string | null;
   profiles: { full_name: string } | null;
 }
 
@@ -22,13 +23,20 @@ interface StaffOption {
   full_name: string;
 }
 
+interface ShopOption {
+  id: string;
+  name: string;
+}
+
 export function SaleSection({
   sales,
   staffOptions,
+  shopOptions,
   isOwner,
 }: {
   sales: SaleRow[];
   staffOptions: StaffOption[];
+  shopOptions: ShopOption[];
   isOwner: boolean;
 }) {
   if (sales.length === 0) return null;
@@ -41,9 +49,10 @@ export function SaleSection({
       <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
         {sales.map((s) => (
           <SaleRow
-            key={`${s.id}-${s.net_price}-${s.sale_date}-${s.staff_id}`}
+            key={`${s.id}-${s.net_price}-${s.sale_date}-${s.staff_id}-${s.shop_id}`}
             sale={s}
             staffOptions={staffOptions}
+            shopOptions={shopOptions}
             isOwner={isOwner}
           />
         ))}
@@ -55,10 +64,12 @@ export function SaleSection({
 function SaleRow({
   sale,
   staffOptions,
+  shopOptions,
   isOwner,
 }: {
   sale: SaleRow;
   staffOptions: StaffOption[];
+  shopOptions: ShopOption[];
   isOwner: boolean;
 }) {
   const router = useRouter();
@@ -156,8 +167,24 @@ function SaleRow({
           )}
         </div>
 
-        {/* Seller */}
-        <div className="flex items-center gap-2">
+        {/* Shop + Seller */}
+        <div className="flex flex-wrap items-center gap-3">
+          {isOwner && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-neutral-500">Shop</span>
+              <select
+                defaultValue={sale.shop_id ?? ""}
+                disabled={pending}
+                onChange={(e) => patch({ shop_id: e.target.value })}
+                className="rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1 text-sm disabled:opacity-50"
+              >
+                {shopOptions.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
           <span className="text-xs text-neutral-500">Sold by</span>
           {isOwner ? (
             <select
@@ -174,6 +201,7 @@ function SaleRow({
             <span>{sale.profiles?.full_name ?? "—"}</span>
           )}
           {pending && <span className="text-xs text-neutral-400">Saving…</span>}
+          </div>
         </div>
       </div>
 

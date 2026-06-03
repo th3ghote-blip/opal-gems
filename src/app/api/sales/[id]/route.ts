@@ -8,6 +8,7 @@ const body = z.object({
   staff_id: z.string().uuid().optional(),
   sale_date: z.string().optional(),
   net_price: z.number().positive().optional(),
+  shop_id: z.string().uuid().optional(),
 });
 
 // Owner-only: reassign seller and/or change date on a sale.
@@ -22,9 +23,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const admin = createAdminClient();
   const update: Record<string, unknown> = {};
 
-  if (parsed.data.sale_date) {
-    update.sale_date = parsed.data.sale_date;
-  }
+  if (parsed.data.sale_date) update.sale_date = parsed.data.sale_date;
+  if (parsed.data.shop_id)   update.shop_id   = parsed.data.shop_id;
 
   // Load sale whenever staff or net_price is changing (need gross_price / commission_pct)
   if (parsed.data.staff_id || parsed.data.net_price !== undefined) {
