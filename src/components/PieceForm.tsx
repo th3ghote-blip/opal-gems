@@ -140,6 +140,16 @@ export function PieceForm({ initial = {}, shops, enums, isOwner, mode }: Props) 
             placeholder="DM-342666"
           />
         </Field>
+        <Field label="Name" required>
+          <input
+            name="description"
+            defaultValue={initial.description ?? ""}
+            required
+            autoComplete="off"
+            className={inputCls}
+            placeholder="Diamond Tennis Necklace"
+          />
+        </Field>
         <Field label="Type" required>
           <Select name="type" required defaultValue={initial.type ?? ""} options={enums.type} />
         </Field>
@@ -218,10 +228,7 @@ export function PieceForm({ initial = {}, shops, enums, isOwner, mode }: Props) 
         )}
       </Section>
 
-      <Section title="Description">
-        <Field label="Public description (visible to staff & in detail view)">
-          <textarea name="description" defaultValue={initial.description ?? ""} rows={3} className={inputCls + " resize-none"} />
-        </Field>
+      <Section title="Tags &amp; Photos">
         <Field label="Tags">
           <div className="flex flex-wrap gap-1.5 mb-2">
             {tags.map((t) => (
@@ -245,6 +252,7 @@ export function PieceForm({ initial = {}, shops, enums, isOwner, mode }: Props) 
       </Section>
 
       <Section title="Photos">
+
         {existingPhotos.length > 0 && (
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-3">
             {existingPhotos.map((p) => (
