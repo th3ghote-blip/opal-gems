@@ -286,18 +286,18 @@ export function SellForm({
             />
           </div>
         </div>
-          {overThreshold && !isOwner && (
-            <p className="mt-1 text-xs text-amber-600">
-              Above {maxNoApprovalDiscount}% — requires owner approval. Sale will queue as a request.
-            </p>
-          )}
-          {overThreshold && (
-            <div className="mt-2">
-              <label className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">Reason for higher discount</label>
-              <input name="discount_reason" className={inputCls} placeholder="e.g. honeymoon couple, repeat customer" />
-            </div>
-          )}
-        </div>
+
+        {overThreshold && !isOwner && (
+          <p className="mt-1 text-xs text-amber-600">
+            Above {maxNoApprovalDiscount}% — requires owner approval. Sale will queue as a request.
+          </p>
+        )}
+        {overThreshold && (
+          <div className="mt-2">
+            <label className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">Reason for higher discount</label>
+            <input name="discount_reason" className={inputCls} placeholder="e.g. honeymoon couple, repeat customer" />
+          </div>
+        )}
       </section>
 
       <section className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-4 space-y-3">
