@@ -91,8 +91,8 @@ export function PiecesFilters({ shops, types, view: viewProp }: { shops: Shop[];
           <option value="">All types</option>
           {types.map((t) => <option key={t.value} value={t.value}>{t.value}</option>)}
         </select>
-        <select value={params.get("status") ?? ""} onChange={(e) => pushWith({ status: e.target.value })} className={inputCls}>
-          <option value="">All status</option>
+        <select value={params.get("status") ?? "in_stock"} onChange={(e) => pushWith({ status: e.target.value })} className={inputCls}>
+          <option value="all">All status</option>
           <option value="in_stock">In stock</option>
           <option value="reserved">Reserved</option>
           <option value="sold">Sold</option>

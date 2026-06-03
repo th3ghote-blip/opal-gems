@@ -91,7 +91,9 @@ export default async function PiecesPage({ searchParams }: { searchParams: Searc
   }
   if (searchParams.shop)      query = query.eq("current_shop_id", searchParams.shop);
   if (searchParams.type)      query = query.eq("type", searchParams.type);
-  if (searchParams.status)    query = query.eq("status", searchParams.status);
+  // Default to in_stock; "all" param clears the filter
+  const statusFilter = searchParams.status === "all" ? null : (searchParams.status ?? "in_stock");
+  if (statusFilter)           query = query.eq("status", statusFilter);
   if (searchParams.metal)     query = query.eq("metal", searchParams.metal);
   if (searchParams.karat)     query = query.eq("karat", searchParams.karat);
   if (searchParams.price_min) query = query.gte("sale_price", parseFloat(searchParams.price_min));
