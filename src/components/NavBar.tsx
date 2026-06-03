@@ -11,14 +11,14 @@ interface Props {
 }
 
 const allItems: { href: string; label: string; roles: UserRole[]; icon: string }[] = [
-  { href: "/dashboard",    label: "Home",     roles: ["owner", "manager", "staff"], icon: "◆" },
-  { href: "/pieces",       label: "Pieces",   roles: ["owner", "manager", "staff"], icon: "◇" },
+  { href: "/dashboard",    label: "Home",      roles: ["owner", "manager", "staff"], icon: "◆" },
+  { href: "/analytics",    label: "Analytics", roles: ["owner"],                     icon: "▲" },
+  { href: "/pieces",       label: "Pieces",    roles: ["owner", "manager", "staff"], icon: "◇" },
   { href: "/customers",    label: "Customers", roles: ["owner", "manager", "staff"], icon: "◎" },
   { href: "/movements",    label: "Movements", roles: ["owner", "manager", "staff"], icon: "↔" },
-  { href: "/stock-counts", label: "Counts",   roles: ["owner", "manager"],          icon: "▦" },
-  { href: "/analytics",    label: "Analytics", roles: ["owner"],                    icon: "▲" },
-  { href: "/activity",     label: "Activity", roles: ["owner"],                     icon: "◈" },
-  { href: "/settings",     label: "Settings", roles: ["owner"],                     icon: "⚙" },
+  { href: "/stock-counts", label: "Counts",    roles: ["owner", "manager"],          icon: "▦" },
+  { href: "/activity",     label: "Activity",  roles: ["owner"],                     icon: "◈" },
+  { href: "/settings",     label: "Settings",  roles: ["owner"],                     icon: "⚙" },
 ];
 
 export function NavBar({ role, fullName }: Props) {
