@@ -36,6 +36,7 @@ insert into public.enum_values (enum_name, value, sort_order) values
   ('type', 'Anklet',    90),
   ('type', 'Chain',    100),
   ('type', 'Watch',    110),
+  ('type', 'Loose',    120),
 
   -- Metals
   ('metal', 'Yellow Gold',     10),
