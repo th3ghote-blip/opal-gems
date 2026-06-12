@@ -9,6 +9,7 @@ const body = z.object({
   commission_pct: z.number().optional(),
   active: z.boolean().optional(),
   full_name: z.string().min(1).optional(),
+  password: z.string().min(6).optional(),
   // When provided, replaces all profile_shops rows and sets default_shop_id to first entry
   shop_ids: z.array(z.string().uuid()).optional(),
 });
@@ -21,7 +22,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const parsed = body.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Bad request" }, { status: 400 });
 
-  const { shop_ids, ...profilePatch } = parsed.data;
+  const { shop_ids, password, ...profilePatch } = parsed.data;
 
   // If shop_ids is being updated, sync default_shop_id to the first selected shop
   if (shop_ids !== undefined) {
@@ -46,6 +47,12 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         .insert(shop_ids.map((shop_id) => ({ profile_id: params.id, shop_id })));
       if (iErr) return NextResponse.json({ error: iErr.message }, { status: 500 });
     }
+  }
+
+  // Update password via Auth admin API
+  if (password) {
+    const { error: pwErr } = await admin.auth.admin.updateUserById(params.id, { password });
+    if (pwErr) return NextResponse.json({ error: pwErr.message }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

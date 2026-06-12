@@ -53,6 +53,7 @@ export function StaffTab({ profiles, shops }: { profiles: Profile[]; shops: Shop
               <th className="text-left px-3 py-2">Shops</th>
               <th className="text-left px-3 py-2">Comm %</th>
               <th className="text-left px-3 py-2">Active</th>
+              <th className="text-left px-3 py-2">Password</th>
             </tr>
           </thead>
           <tbody>
@@ -78,6 +79,7 @@ function ProfileRow({
   onUpdate: (id: string, patch: Record<string, unknown>) => void;
 }) {
   const [shopIds, setShopIds] = useState<string[]>(p.shop_ids);
+  const [newPw, setNewPw] = useState("");
 
   function toggleShop(shopId: string, checked: boolean) {
     const newIds = checked ? [...shopIds, shopId] : shopIds.filter((id) => id !== shopId);
@@ -138,6 +140,26 @@ function ProfileRow({
           defaultChecked={p.active}
           onChange={(e) => onUpdate(p.id, { active: e.target.checked })}
         />
+      </td>
+
+      {/* Password reset */}
+      <td className="px-3 py-2">
+        <div className="flex gap-1">
+          <input
+            type="password"
+            placeholder="New password"
+            value={newPw}
+            onChange={(e) => setNewPw(e.target.value)}
+            className="w-32 rounded border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
+          />
+          <button
+            disabled={newPw.length < 6}
+            onClick={() => { onUpdate(p.id, { password: newPw }); setNewPw(""); }}
+            className="px-2 py-1 rounded bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900 text-xs disabled:opacity-30"
+          >
+            Set
+          </button>
+        </div>
       </td>
     </tr>
   );
