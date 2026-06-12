@@ -31,10 +31,16 @@ interface Customer {
   address: string | null;
 }
 
+interface Shop {
+  id: string;
+  name: string;
+}
+
 interface Props {
   piece: Piece;
   currentUser: Profile;
   staff: Profile[];
+  shops: Shop[];
   paymentMethods: string[];
   maxNoApprovalDiscount: number;
   defaultCommissionPct: number;
@@ -44,6 +50,7 @@ export function SellForm({
   piece,
   currentUser,
   staff,
+  shops,
   paymentMethods,
   maxNoApprovalDiscount,
   defaultCommissionPct,
@@ -57,6 +64,7 @@ export function SellForm({
   const [discountPct, setDiscountPct] = useState(0);
   const [qtySold, setQtySold] = useState(1);
   const [staffId, setStaffId] = useState(currentUser.id);
+  const [saleShopId, setSaleShopId] = useState<string>(piece.current_shop_id ?? "");
   const [saleDate, setSaleDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [customerQuery, setCustomerQuery] = useState("");
@@ -131,6 +139,7 @@ export function SellForm({
       piece_id: piece.id,
       customer_id: customer?.id ?? null,
       staff_id: staffId,
+      shop_id: isOwner ? saleShopId || null : null,
       discount_pct: discountPct,
       qty_sold: qtySold,
       sale_date: saleDate,
@@ -319,6 +328,15 @@ export function SellForm({
               ))}
             </select>
           </Field>
+          {isOwner && (
+            <Field label="Shop">
+              <select value={saleShopId} onChange={(e) => setSaleShopId(e.target.value)} className={inputCls}>
+                {shops.map((s) => (
+                  <option key={s.id} value={s.id}>{s.name}</option>
+                ))}
+              </select>
+            </Field>
+          )}
           <Field label="Payment method">
             <select name="payment_method" defaultValue="" className={inputCls}>
               <option value="">—</option>

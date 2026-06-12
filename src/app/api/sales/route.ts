@@ -10,6 +10,7 @@ const body = z.object({
   piece_id: z.string().uuid(),
   customer_id: z.string().uuid().nullable().optional(),
   staff_id: z.string().uuid(),
+  shop_id: z.string().uuid().nullable().optional(),  // owner override; defaults to piece's current shop
   discount_pct: z.number().min(0).max(100),
   qty_sold: z.number().int().min(1).default(1),
   sale_date: z.string().optional(),   // ISO date string; defaults to now() if omitted
@@ -67,7 +68,7 @@ export async function POST(req: NextRequest) {
         piece_id: data.piece_id,
         customer_id: data.customer_id ?? null,
         staff_id: data.staff_id,
-        shop_id: piece.current_shop_id,
+        shop_id: (profile.role === "owner" && data.shop_id) ? data.shop_id : piece.current_shop_id,
         requested_pct: data.discount_pct,
         reason: data.reason ?? null,
       })
@@ -108,11 +109,13 @@ export async function POST(req: NextRequest) {
   const commissionAmount = +(netPrice * (commissionPct / 100)).toFixed(2);
   const qtySold = data.qty_sold ?? 1;
 
+  const saleShopId = (profile.role === "owner" && data.shop_id) ? data.shop_id : piece.current_shop_id;
+
   const saleRow = {
     piece_id: data.piece_id,
     customer_id: data.customer_id ?? null,
     staff_id: data.staff_id,
-    shop_id: piece.current_shop_id,
+    shop_id: saleShopId,
     gross_price: grossPrice,
     discount_pct: data.discount_pct,
     net_price: netPrice,

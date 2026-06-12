@@ -8,7 +8,7 @@ export default async function SellPage({ params }: { params: { id: string } }) {
   const profile = (await getCurrentProfile())!;
   const supabase = createClient();
 
-  const [pieceRes, settingsRes, staffRes, paymentMethodsRes] = await Promise.all([
+  const [pieceRes, settingsRes, staffRes, paymentMethodsRes, shopsRes] = await Promise.all([
     supabase
       .from("pieces")
       .select("id, sku, type, original_price, sale_price, quantity, status, current_shop_id, shops!current_shop_id(name)")
@@ -29,6 +29,7 @@ export default async function SellPage({ params }: { params: { id: string } }) {
       .eq("enum_name", "payment_method")
       .eq("active", true)
       .order("sort_order"),
+    supabase.from("shops").select("id, name").eq("active", true).order("name"),
   ]);
 
   const piece = pieceRes.data;
@@ -62,6 +63,7 @@ export default async function SellPage({ params }: { params: { id: string } }) {
         }}
         currentUser={profile}
         staff={staffRes.data ?? []}
+        shops={shopsRes.data ?? []}
         paymentMethods={(paymentMethodsRes.data ?? []).map((p) => p.value)}
         maxNoApprovalDiscount={maxNoApprovalDiscount}
         defaultCommissionPct={defaultCommissionPct}
