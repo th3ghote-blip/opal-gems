@@ -16,7 +16,7 @@ const allItems: { href: string; label: string; roles: UserRole[]; icon: string }
   { href: "/pieces",       label: "Pieces",    roles: ["owner", "manager", "staff"], icon: "◇" },
   { href: "/customers",    label: "Customers", roles: ["owner", "manager", "staff"], icon: "◎" },
   { href: "/movements",    label: "Movements", roles: ["owner", "manager", "staff"], icon: "↔" },
-  { href: "/stock-counts", label: "Counts",    roles: ["owner", "manager"],          icon: "▦" },
+  { href: "/stock-counts", label: "Counts",    roles: ["owner", "manager", "staff"], icon: "▦" },
   { href: "/activity",     label: "Activity",  roles: ["owner"],                     icon: "◈" },
   { href: "/settings",     label: "Settings",  roles: ["owner"],                     icon: "⚙" },
 ];
