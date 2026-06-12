@@ -40,7 +40,7 @@ function Pill({ label, color }: { label: string; color: "green" | "amber" | "red
 
 export default async function AnalyticsPage() {
   const profile = (await getCurrentProfile())!;
-  if (profile.role !== "owner") redirect("/dashboard");
+  if (profile.role === "staff") redirect("/dashboard");
 
   const supabase = createClient();
   const now = new Date();
