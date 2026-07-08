@@ -24,24 +24,18 @@ function isMisc(sku: string | null | undefined) {
   return sku.trim().toLowerCase() === "misc" || sku.trim().toLowerCase().startsWith("misc");
 }
 
-const RANGES = ["week", "month", "quarter", "ytd"] as const;
+const RANGES = ["today", "7d", "month", "lastmonth", "3m", "ytd"] as const;
 type Range = (typeof RANGES)[number];
 const RANGE_LABELS: Record<Range, string> = {
-  week: "This week",
+  today: "Today",
+  "7d": "Last 7 days",
   month: "This month",
-  quarter: "This quarter",
+  lastmonth: "Last month",
+  "3m": "Last 3 months",
   ytd: "Year to date",
 };
 
-function startOfWeek(d: Date): Date {
-  const day = d.getDay(); // 0 = Sun … 6 = Sat
-  const diff = day === 0 ? 6 : day - 1; // days since Monday
-  const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff);
-  monday.setHours(0, 0, 0, 0);
-  return monday;
-}
-
-export default async function Dashboard({ searchParams }: { searchParams: { shop?: string; misc?: string; range?: string } }) {
+export default async function Dashboard({ searchParams }: { searchParams: { shop?: string; misc?: string; range?: string; from?: string; to?: string } }) {
   const profile = (await getCurrentProfile())!;
   const supabase = createClient();
   const isOwner = profile.role === "owner";
@@ -49,18 +43,54 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
   const shopFilter   = searchParams.shop ?? null;
   const includeMisc  = searchParams.misc === "1";
   const isJupiterAll = shopFilter === "jupiter_all";
-  const range: Range = RANGES.includes(searchParams.range as Range) ? (searchParams.range as Range) : "week";
 
-  // YTD window
   const now = new Date();
-  const yearStart = new Date(now.getFullYear(), 0, 1).toISOString();
+  const isDate = (s?: string) => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
+  const customFrom = isDate(searchParams.from) ? searchParams.from! : null;
+  const customTo   = isDate(searchParams.to)   ? searchParams.to!   : null;
+  const range: Range = RANGES.includes(searchParams.range as Range) ? (searchParams.range as Range) : "month";
 
-  const periodStart: string = {
-    week:    startOfWeek(now).toISOString(),
-    month:   new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
-    quarter: new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1).toISOString(),
-    ytd:     yearStart,
-  }[range];
+  // Resolve the sales window. Custom from/to beats presets; default "This month".
+  let periodStart: string;
+  let periodEnd: string | null = null; // exclusive
+  let rangeLabel: string;
+  if (customFrom || customTo) {
+    periodStart = customFrom
+      ? new Date(customFrom + "T00:00:00").toISOString()
+      : new Date(now.getFullYear(), 0, 1).toISOString();
+    if (customTo) {
+      const end = new Date(customTo + "T00:00:00");
+      end.setDate(end.getDate() + 1);
+      periodEnd = end.toISOString();
+    }
+    rangeLabel = `${customFrom ?? "…"} → ${customTo ?? "today"}`;
+  } else {
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    periodStart = {
+      today:     todayStart.toISOString(),
+      "7d":      new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString(),
+      month:     new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
+      lastmonth: new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString(),
+      "3m":      new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()).toISOString(),
+      ytd:       new Date(now.getFullYear(), 0, 1).toISOString(),
+    }[range];
+    if (range === "lastmonth") periodEnd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    rangeLabel = RANGE_LABELS[range];
+  }
+
+  // Links that swap one filter while keeping the rest
+  const buildQs = (patch: Record<string, string | null>) => {
+    const merged: Record<string, string | null> = {
+      range: customFrom || customTo ? null : (range === "month" ? null : range),
+      from: customFrom, to: customTo,
+      shop: shopFilter, misc: includeMisc ? "1" : null,
+      ...patch,
+    };
+    const params = new URLSearchParams();
+    for (const [k, v] of Object.entries(merged)) if (v) params.set(k, v);
+    const qs = params.toString();
+    return `/dashboard${qs ? `?${qs}` : ""}`;
+  };
 
   // Shops must resolve first so jupiterIds is available for piece/sales filters
   const { data: shopsData } = await supabase.from("shops").select("id, name").eq("active", true).order("name");
@@ -79,8 +109,9 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
       let q = supabase
         .from("sales")
         .select("id, piece_id, net_price, gross_price, discount_pct, staff_commission_amount, sale_date, staff_id, shop_id, profiles!staff_id(full_name), shops!shop_id(name), pieces!piece_id(sku, type)")
-        .gte("sale_date", yearStart)
+        .gte("sale_date", periodStart)
         .order("sale_date", { ascending: false });
+      if (periodEnd) q = q.lt("sale_date", periodEnd);
       if (isJupiterAll && jupiterIds.length) q = q.or(jupiterIds.map((id) => `shop_id.eq.${id}`).join(","));
       else if (shopFilter) q = q.eq("shop_id", shopFilter);
       return q;
@@ -106,11 +137,11 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
     .filter((p) => p.status === "in_stock" || p.status === "reserved")
     .reduce((sum, p) => sum + Number(p.sale_price ?? 0) * (p.quantity ?? 1), 0);
 
-  // Aggregate sales for the selected timeframe
-  const periodSales = sales.filter((s) => s.sale_date >= periodStart);
-  const periodRevenue = periodSales.reduce((s, x) => s + Number(x.net_price ?? 0), 0);
-  const periodCommissions = periodSales.reduce((s, x) => s + Number(x.staff_commission_amount ?? 0), 0);
-  const periodAvg = periodSales.length ? periodRevenue / periodSales.length : 0;
+  // The sales query is already bounded to the selected timeframe,
+  // so every section below (tiles, monthly, staff, recent) reflects it.
+  const periodRevenue = sales.reduce((s, x) => s + Number(x.net_price ?? 0), 0);
+  const periodCommissions = sales.reduce((s, x) => s + Number(x.staff_commission_amount ?? 0), 0);
+  const periodAvg = sales.length ? periodRevenue / sales.length : 0;
 
   // Monthly breakdown
   const monthly = new Map<string, { revenue: number; count: number }>();
@@ -148,7 +179,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
       <header>
         <h1 className="text-2xl font-semibold tracking-tight">Home</h1>
         <p className="text-sm text-neutral-500">
-          {profile.full_name} · {profile.role} · YTD{activeShop ? ` · ${activeShop.name}` : ""}
+          {profile.full_name} · {profile.role} · {rangeLabel}{activeShop ? ` · ${activeShop.name}` : ""}
         </p>
       </header>
 
@@ -156,7 +187,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
       {shops.length > 1 && (
         <div className="flex flex-wrap gap-1.5 items-center">
           <Link
-            href={includeMisc ? "/dashboard?misc=1" : "/dashboard"}
+            href={buildQs({ shop: null })}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               !shopFilter
                 ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
@@ -168,7 +199,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
           {/* Jupiter (all) — shown only when there are 2+ Jupiter shops */}
           {jupiterIds.length > 1 && (
             <Link
-              href={`/dashboard?shop=jupiter_all${includeMisc ? "&misc=1" : ""}`}
+              href={buildQs({ shop: "jupiter_all" })}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 isJupiterAll
                   ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
@@ -181,7 +212,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
           {shops.map((s) => (
             <Link
               key={s.id}
-              href={`/dashboard?shop=${s.id}${includeMisc ? "&misc=1" : ""}`}
+              href={buildQs({ shop: s.id })}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 shopFilter === s.id
                   ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
@@ -195,10 +226,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
           <span className="w-px h-5 bg-neutral-300 dark:bg-neutral-700 mx-1" />
 
           <Link
-            href={shopFilter
-              ? (includeMisc ? `/dashboard?shop=${shopFilter}` : `/dashboard?shop=${shopFilter}&misc=1`)
-              : (includeMisc ? "/dashboard" : "/dashboard?misc=1")
-            }
+            href={buildQs({ misc: includeMisc ? null : "1" })}
             className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
               includeMisc
                 ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300"
@@ -209,6 +237,43 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
           </Link>
         </div>
       )}
+
+      {/* Timeframe — drives every section below */}
+      <div className="flex flex-wrap gap-1.5 items-center">
+        {RANGES.map((r) => (
+          <Link
+            key={r}
+            href={buildQs({ range: r === "month" ? null : r, from: null, to: null })}
+            className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+              !customFrom && !customTo && range === r
+                ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
+                : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+            }`}
+          >
+            {RANGE_LABELS[r]}
+          </Link>
+        ))}
+
+        <span className="w-px h-5 bg-neutral-300 dark:bg-neutral-700 mx-1" />
+
+        {/* Custom range — plain GET form */}
+        <form method="get" action="/dashboard" className="flex flex-wrap gap-1.5 items-center">
+          {shopFilter && <input type="hidden" name="shop" value={shopFilter} />}
+          {includeMisc && <input type="hidden" name="misc" value="1" />}
+          <input
+            type="date" name="from" defaultValue={customFrom ?? ""}
+            className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
+          />
+          <span className="text-sm text-neutral-400">→</span>
+          <input
+            type="date" name="to" defaultValue={customTo ?? ""}
+            className="rounded-md border border-neutral-300 dark:border-neutral-700 bg-white dark:bg-neutral-900 px-2 py-1 text-sm"
+          />
+          <button type="submit" className="px-3 py-1.5 rounded-full text-sm font-medium bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700">
+            Apply
+          </button>
+        </form>
+      </div>
 
       <section className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <Stat label="In stock"           value={inStock} />
@@ -231,38 +296,14 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
       )}
 
       {canSeeCommission && (
-        <section className="space-y-2">
-          <div className="flex flex-wrap gap-1.5 items-center">
-            {RANGES.map((r) => {
-              const params = new URLSearchParams();
-              if (shopFilter) params.set("shop", shopFilter);
-              if (includeMisc) params.set("misc", "1");
-              if (r !== "week") params.set("range", r);
-              const qs = params.toString();
-              return (
-                <Link
-                  key={r}
-                  href={`/dashboard${qs ? `?${qs}` : ""}`}
-                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    range === r
-                      ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
-                      : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
-                  }`}
-                >
-                  {RANGE_LABELS[r]}
-                </Link>
-              );
-            })}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <Stat
-              label={`${RANGE_LABELS[range]} revenue`}
-              value={money(periodRevenue)}
-              sub={`${periodSales.length} sale${periodSales.length === 1 ? "" : "s"}`}
-            />
-            <Stat label={`${RANGE_LABELS[range]} commissions`} value={money(periodCommissions)} />
-            <Stat label="Avg ticket" value={money(periodAvg)} />
-          </div>
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <Stat
+            label="Revenue"
+            value={money(periodRevenue)}
+            sub={`${sales.length} sale${sales.length === 1 ? "" : "s"}`}
+          />
+          <Stat label="Commissions" value={money(periodCommissions)} />
+          <Stat label="Avg ticket" value={money(periodAvg)} />
         </section>
       )}
 
@@ -375,7 +416,7 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
 
       {sales.length === 0 && (
         <p className="text-sm text-neutral-500 rounded-lg border border-dashed border-neutral-300 dark:border-neutral-700 p-6 text-center">
-          No sales yet this year. Record one from a piece&apos;s detail page.
+          No sales in this period ({rangeLabel.toLowerCase()}). Try a wider timeframe, or record a sale from a piece&apos;s detail page.
         </p>
       )}
     </div>
