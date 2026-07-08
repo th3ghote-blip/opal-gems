@@ -39,22 +39,16 @@ function Pill({ label, color }: { label: string; color: "green" | "amber" | "red
 
 // ── date ranges ──────────────────────────────────────────────────────────────
 
-const PRESETS = ["week", "month", "quarter", "ytd"] as const;
+const PRESETS = ["today", "7d", "month", "lastmonth", "3m", "ytd"] as const;
 type Preset = (typeof PRESETS)[number];
 const PRESET_LABELS: Record<Preset, string> = {
-  week: "This week",
+  today: "Today",
+  "7d": "Last 7 days",
   month: "This month",
-  quarter: "This quarter",
+  lastmonth: "Last month",
+  "3m": "Last 3 months",
   ytd: "Year to date",
 };
-
-function startOfWeek(d: Date): Date {
-  const day = d.getDay();
-  const diff = day === 0 ? 6 : day - 1; // days since Monday
-  const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff);
-  monday.setHours(0, 0, 0, 0);
-  return monday;
-}
 
 function isMiscSku(sku: string | null | undefined) {
   if (!sku || !sku.trim()) return true;
@@ -95,11 +89,14 @@ export default async function AnalyticsPage({ searchParams }: Props) {
     rangeLabel = `${customFrom ?? "…"} → ${customTo ?? "today"}`;
   } else {
     rangeStart = {
-      week:    startOfWeek(now).toISOString(),
-      month:   new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
-      quarter: new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1).toISOString(),
-      ytd:     new Date(now.getFullYear(), 0, 1).toISOString(),
+      today:     new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString(),
+      "7d":      new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString(),
+      month:     new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
+      lastmonth: new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString(),
+      "3m":      new Date(now.getFullYear(), now.getMonth() - 3, now.getDate()).toISOString(),
+      ytd:       new Date(now.getFullYear(), 0, 1).toISOString(),
     }[preset];
+    if (preset === "lastmonth") rangeEnd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
     rangeLabel = PRESET_LABELS[preset];
   }
 
