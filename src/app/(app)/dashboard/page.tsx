@@ -24,17 +24,43 @@ function isMisc(sku: string | null | undefined) {
   return sku.trim().toLowerCase() === "misc" || sku.trim().toLowerCase().startsWith("misc");
 }
 
-export default async function Dashboard({ searchParams }: { searchParams: { shop?: string; misc?: string } }) {
+const RANGES = ["week", "month", "quarter", "ytd"] as const;
+type Range = (typeof RANGES)[number];
+const RANGE_LABELS: Record<Range, string> = {
+  week: "This week",
+  month: "This month",
+  quarter: "This quarter",
+  ytd: "Year to date",
+};
+
+function startOfWeek(d: Date): Date {
+  const day = d.getDay(); // 0 = Sun … 6 = Sat
+  const diff = day === 0 ? 6 : day - 1; // days since Monday
+  const monday = new Date(d.getFullYear(), d.getMonth(), d.getDate() - diff);
+  monday.setHours(0, 0, 0, 0);
+  return monday;
+}
+
+export default async function Dashboard({ searchParams }: { searchParams: { shop?: string; misc?: string; range?: string } }) {
   const profile = (await getCurrentProfile())!;
   const supabase = createClient();
   const isOwner = profile.role === "owner";
+  const canSeeCommission = isOwner || profile.role === "manager";
   const shopFilter   = searchParams.shop ?? null;
   const includeMisc  = searchParams.misc === "1";
   const isJupiterAll = shopFilter === "jupiter_all";
+  const range: Range = RANGES.includes(searchParams.range as Range) ? (searchParams.range as Range) : "week";
 
   // YTD window
   const now = new Date();
   const yearStart = new Date(now.getFullYear(), 0, 1).toISOString();
+
+  const periodStart: string = {
+    week:    startOfWeek(now).toISOString(),
+    month:   new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
+    quarter: new Date(now.getFullYear(), Math.floor(now.getMonth() / 3) * 3, 1).toISOString(),
+    ytd:     yearStart,
+  }[range];
 
   // Shops must resolve first so jupiterIds is available for piece/sales filters
   const { data: shopsData } = await supabase.from("shops").select("id, name").eq("active", true).order("name");
@@ -80,12 +106,11 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
     .filter((p) => p.status === "in_stock" || p.status === "reserved")
     .reduce((sum, p) => sum + Number(p.sale_price ?? 0) * (p.quantity ?? 1), 0);
 
-  // Aggregate sales
-  const totalRevenue = sales.reduce((s, x) => s + Number(x.net_price ?? 0), 0);
-  const totalCommissions = sales.reduce((s, x) => s + Number(x.staff_commission_amount ?? 0), 0);
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-  const monthSales = sales.filter((s) => s.sale_date >= monthStart);
-  const monthRevenue = monthSales.reduce((s, x) => s + Number(x.net_price ?? 0), 0);
+  // Aggregate sales for the selected timeframe
+  const periodSales = sales.filter((s) => s.sale_date >= periodStart);
+  const periodRevenue = periodSales.reduce((s, x) => s + Number(x.net_price ?? 0), 0);
+  const periodCommissions = periodSales.reduce((s, x) => s + Number(x.staff_commission_amount ?? 0), 0);
+  const periodAvg = periodSales.length ? periodRevenue / periodSales.length : 0;
 
   // Monthly breakdown
   const monthly = new Map<string, { revenue: number; count: number }>();
@@ -185,15 +210,10 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
         </div>
       )}
 
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <section className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <Stat label="In stock"           value={inStock} />
         <Stat label="Reserved"           value={reserved} />
         <Stat label="Inventory (retail)" value={money(inventoryRetail)} />
-        <Stat
-          label="This month revenue"
-          value={money(monthRevenue)}
-          sub={`${monthSales.length} sale${monthSales.length === 1 ? "" : "s"}`}
-        />
       </section>
 
       {isOwner && (pendingMoves.length > 0 || pendingDiscounts.length > 0) && (
@@ -210,14 +230,39 @@ export default async function Dashboard({ searchParams }: { searchParams: { shop
         </section>
       )}
 
-      {isOwner && (
-        <section className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <Stat label="YTD revenue"      value={money(totalRevenue)} sub={`${sales.length} sales`} />
-          <Stat label="YTD commissions"  value={money(totalCommissions)} />
-          <Stat
-            label="Avg ticket"
-            value={money(sales.length ? totalRevenue / sales.length : 0)}
-          />
+      {canSeeCommission && (
+        <section className="space-y-2">
+          <div className="flex flex-wrap gap-1.5 items-center">
+            {RANGES.map((r) => {
+              const params = new URLSearchParams();
+              if (shopFilter) params.set("shop", shopFilter);
+              if (includeMisc) params.set("misc", "1");
+              if (r !== "week") params.set("range", r);
+              const qs = params.toString();
+              return (
+                <Link
+                  key={r}
+                  href={`/dashboard${qs ? `?${qs}` : ""}`}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    range === r
+                      ? "bg-neutral-900 dark:bg-neutral-100 text-white dark:text-neutral-900"
+                      : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                  }`}
+                >
+                  {RANGE_LABELS[r]}
+                </Link>
+              );
+            })}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <Stat
+              label={`${RANGE_LABELS[range]} revenue`}
+              value={money(periodRevenue)}
+              sub={`${periodSales.length} sale${periodSales.length === 1 ? "" : "s"}`}
+            />
+            <Stat label={`${RANGE_LABELS[range]} commissions`} value={money(periodCommissions)} />
+            <Stat label="Avg ticket" value={money(periodAvg)} />
+          </div>
         </section>
       )}
 
