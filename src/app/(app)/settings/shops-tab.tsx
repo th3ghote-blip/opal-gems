@@ -24,6 +24,7 @@ export function ShopsTab({ shops, profiles }: { shops: Shop[]; profiles: Profile
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  const [showAdd, setShowAdd] = useState(false);
 
   const managers = profiles.filter((p) => p.role === "manager" || p.role === "owner");
 
@@ -41,8 +42,76 @@ export function ShopsTab({ shops, profiles }: { shops: Shop[]; profiles: Profile
     });
   }
 
+  function addShop(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setErr(null);
+    const fd = new FormData(e.currentTarget);
+    const name = String(fd.get("name") ?? "").trim();
+    if (!name) {
+      setErr("Shop name is required.");
+      return;
+    }
+    const payload = {
+      name,
+      hotel_name: String(fd.get("hotel_name") ?? "").trim() || null,
+      address: String(fd.get("address") ?? "").trim() || null,
+      sales_tax_pct: Number(fd.get("sales_tax_pct") ?? 0) || 0,
+    };
+    start(async () => {
+      const res = await fetch("/api/shops", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const j = await res.json().catch(() => ({}));
+      if (!res.ok) setErr(j.error ?? `HTTP ${res.status}`);
+      else {
+        setShowAdd(false);
+        router.refresh();
+      }
+    });
+  }
+
   return (
     <div className="space-y-4">
+      {showAdd ? (
+        <form onSubmit={addShop} className="rounded-lg border-2 border-dashed border-neutral-300 dark:border-neutral-700 p-4 space-y-3">
+          <div className="text-sm font-medium">New shop</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field label="Shop name *">
+              <input name="name" required autoFocus className={inputCls} placeholder="e.g. Olde Naples Hotel" />
+            </Field>
+            <Field label="Hotel name">
+              <input name="hotel_name" className={inputCls} />
+            </Field>
+            <Field label="Address">
+              <input name="address" className={inputCls} />
+            </Field>
+            <Field label="Sales tax %">
+              <input name="sales_tax_pct" type="number" step="0.01" defaultValue={0} className={inputCls} />
+            </Field>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="submit"
+              disabled={pending}
+              className="px-3 py-1.5 rounded-md bg-gold-600 hover:bg-gold-700 dark:bg-gold-500 dark:hover:bg-gold-600 text-white dark:text-neutral-950 text-sm disabled:opacity-50"
+            >
+              Create shop
+            </button>
+            <button type="button" onClick={() => setShowAdd(false)} className="px-3 py-1.5 rounded-md border border-neutral-300 dark:border-neutral-700 text-sm">
+              Cancel
+            </button>
+          </div>
+        </form>
+      ) : (
+        <button
+          onClick={() => setShowAdd(true)}
+          className="w-full rounded-lg border-2 border-dashed border-neutral-300 dark:border-neutral-700 p-3 text-sm text-neutral-500 hover:border-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
+        >
+          + Add shop
+        </button>
+      )}
       {shops.map((s) => (
         <div key={s.id} className="rounded-lg border border-neutral-200 dark:border-neutral-800 p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
