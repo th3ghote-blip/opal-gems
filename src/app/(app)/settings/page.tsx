@@ -28,10 +28,12 @@ export default async function SettingsPage({ searchParams }: Props) {
     admin.auth.admin.listUsers({ perPage: 200 }),
   ]);
 
-  // Build email map from auth.users
+  // Build email + last-sign-in maps from auth.users
   const emailById: Record<string, string> = {};
+  const lastSignInById: Record<string, string | null> = {};
   for (const u of authUsers.data?.users ?? []) {
     emailById[u.id] = u.email ?? "";
+    lastSignInById[u.id] = u.last_sign_in_at ?? null;
   }
 
   // Build shop_ids map: profile_id → shop_id[]
@@ -44,6 +46,7 @@ export default async function SettingsPage({ searchParams }: Props) {
     ...p,
     shop_ids: shopIdsByProfile[p.id] ?? [],
     email: emailById[p.id] ?? "",
+    last_sign_in_at: lastSignInById[p.id] ?? null,
   }));
 
   return (

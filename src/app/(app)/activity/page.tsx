@@ -17,6 +17,7 @@ const ACTION_LABELS: Record<string, string> = {
   stock_count_completed:"Stock count completed",
   stock_count_cancelled:"Stock count cancelled",
   pieces_imported:      "Pieces imported",
+  signed_in:            "Signed in",
   staff_invited:        "Staff invited",
 };
 
@@ -33,6 +34,7 @@ const ACTION_COLORS: Record<string, string> = {
   stock_count_completed:"bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
   pieces_imported:      "bg-plum-100 text-plum-800 dark:bg-plum-900/40 dark:text-plum-300",
   staff_invited:        "bg-gold-100 text-gold-800 dark:bg-gold-900/40 dark:text-gold-300",
+  signed_in:            "bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300",
 };
 
 function formatDetails(action: string, details: Record<string, unknown> | null): string {

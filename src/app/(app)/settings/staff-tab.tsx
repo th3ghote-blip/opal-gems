@@ -13,6 +13,20 @@ interface Profile {
   commission_pct: number;
   active: boolean;
   phone: string | null;
+  last_sign_in_at: string | null;
+}
+
+function relativeTime(iso: string | null): string {
+  if (!iso) return "never";
+  const ms = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(ms / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 interface Shop {
@@ -53,6 +67,7 @@ export function StaffTab({ profiles, shops }: { profiles: Profile[]; shops: Shop
               <th className="text-left px-3 py-2">Shops</th>
               <th className="text-left px-3 py-2">Comm %</th>
               <th className="text-left px-3 py-2">Active</th>
+              <th className="text-left px-3 py-2">Last sign-in</th>
               <th className="text-left px-3 py-2">Password</th>
             </tr>
           </thead>
@@ -140,6 +155,11 @@ function ProfileRow({
           defaultChecked={p.active}
           onChange={(e) => onUpdate(p.id, { active: e.target.checked })}
         />
+      </td>
+
+      {/* Last sign-in */}
+      <td className={`px-3 py-2 text-xs whitespace-nowrap ${p.last_sign_in_at ? "text-neutral-500" : "text-amber-600"}`}>
+        {relativeTime(p.last_sign_in_at)}
       </td>
 
       {/* Password reset */}

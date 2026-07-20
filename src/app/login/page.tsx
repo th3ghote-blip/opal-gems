@@ -24,6 +24,8 @@ export default function LoginPage() {
         setStatus("error");
         setError(error.message);
       } else {
+        // Record the sign-in event (attributed server-side from the fresh session).
+        await fetch("/api/auth/signed-in", { method: "POST" }).catch(() => {});
         // Honor ?next=/path so external links (e.g. website "Register Customer")
         // can land staff on a specific page. Internal paths only — no open redirect.
         const next = new URLSearchParams(window.location.search).get("next");
