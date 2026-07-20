@@ -117,7 +117,7 @@ export default async function AnalyticsPage({ searchParams }: Props) {
     return `/analytics${qs ? `?${qs}` : ""}`;
   };
 
-  const [salesRes, piecesRes, shopsRes, profilesRes] = await Promise.all([
+  const [salesRes, piecesRes, shopsRes, profilesRes, customersRes] = await Promise.all([
     (() => {
       let q = supabase
         .from("sales")
@@ -133,6 +133,12 @@ export default async function AnalyticsPage({ searchParams }: Props) {
       .select("id, sku, type, current_shop_id, sale_price, quantity, status"),
     supabase.from("shops").select("id, name").eq("active", true).order("name"),
     supabase.from("profiles").select("id, full_name").eq("active", true).order("full_name"),
+    // Customers registered in the window (attributed server-side via created_by; not shop-scoped)
+    (() => {
+      let q = supabase.from("customers").select("id, created_by, created_at").gte("created_at", rangeStart);
+      if (rangeEnd) q = q.lt("created_at", rangeEnd);
+      return q;
+    })(),
   ]);
 
   const allSalesRaw = (salesRes.data ?? []) as unknown as {
@@ -150,6 +156,18 @@ export default async function AnalyticsPage({ searchParams }: Props) {
 
   const shopName = (id: string | null) => shops.find((s) => s.id === id)?.name ?? "—";
   const staffName = (id: string) => profiles.find((p) => p.id === id)?.full_name ?? "—";
+
+  // ── 0. Customer registrations by staff ─────────────────────────────────────
+  const registrations = (customersRes.data ?? []) as { id: string; created_by: string | null; created_at: string }[];
+  const byRegistrar = new Map<string, { name: string; count: number }>();
+  for (const c of registrations) {
+    const key = c.created_by ?? "unknown";
+    const row = byRegistrar.get(key) ?? { name: c.created_by ? staffName(c.created_by) : "Unattributed", count: 0 };
+    row.count += 1;
+    byRegistrar.set(key, row);
+  }
+  const registrarRows = Array.from(byRegistrar.values()).sort((a, b) => b.count - a.count);
+  const maxRegistrations = Math.max(...registrarRows.map((r) => r.count), 1);
 
   // ── 1. Revenue by shop ─────────────────────────────────────────────────────
   const revenueByShop = new Map<string, { name: string; revenue: number; count: number; discount: number }>();
@@ -441,6 +459,27 @@ export default async function AnalyticsPage({ searchParams }: Props) {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+        </Card>
+        {/* Customer registrations by staff */}
+        <Card title="Customer registrations by staff">
+          {registrarRows.length === 0 ? (
+            <p className="text-sm text-neutral-500">No customers registered in this period.</p>
+          ) : (
+            <div className="space-y-3">
+              <div className="text-xs text-neutral-500">
+                {registrations.length} customer{registrations.length !== 1 ? "s" : ""} registered · attributed automatically to the signed-in account
+              </div>
+              {registrarRows.map((r) => (
+                <div key={r.name} className="space-y-1">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="font-medium">{r.name}</span>
+                    <span className="tabular-nums">{r.count}</span>
+                  </div>
+                  <Bar value={r.count} max={maxRegistrations} color="bg-emerald-500" />
+                </div>
+              ))}
             </div>
           )}
         </Card>
