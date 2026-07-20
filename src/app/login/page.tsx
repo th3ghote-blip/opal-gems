@@ -24,7 +24,11 @@ export default function LoginPage() {
         setStatus("error");
         setError(error.message);
       } else {
-        router.push("/dashboard");
+        // Honor ?next=/path so external links (e.g. website "Register Customer")
+        // can land staff on a specific page. Internal paths only — no open redirect.
+        const next = new URLSearchParams(window.location.search).get("next");
+        const safe = next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
+        router.push(safe);
       }
     } else {
       // Magic link — real email required
