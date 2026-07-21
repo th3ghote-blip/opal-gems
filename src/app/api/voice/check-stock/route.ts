@@ -41,10 +41,11 @@ export async function POST(req: Request) {
     .gt("quantity", 0)
     .ilike("type", `%${type}%`);
   if (stone) query = query.ilike("main_stone", `%${stone}%`);
-  let { data: pieces, error } = await query.limit(1000);
-  if (error) {
+  const first = await query.limit(1000);
+  if (first.error) {
     return NextResponse.json({ result: "Availability can't be checked right now. Offer a callback." });
   }
+  let pieces = first.data;
 
   // Stone data is sparse in inventory — if a stone filter finds nothing but the
   // piece type IS stocked, fall back to type-level availability with a caveat.
