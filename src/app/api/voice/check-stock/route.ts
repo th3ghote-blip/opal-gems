@@ -12,14 +12,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  let body: { type?: string; stone?: string; shop?: string } = {};
+  let body: { type?: string; stone?: string; shop?: string; keywords?: string } = {};
   try {
     body = await req.json();
   } catch {}
   const type = (body.type ?? "").trim();
   const stone = (body.stone ?? "").trim();
   const shopQuery = (body.shop ?? "").trim();
-  if (!type) {
+  // Specific-piece search: match each keyword against the item description,
+  // e.g. "oval cross pendant" — lets callers ask for pieces they saw online.
+  const keywords = (body.keywords ?? "")
+    .trim()
+    .split(/\s+/)
+    .filter((w) => w.length > 2)
+    .slice(0, 5);
+  if (!type && !keywords.length) {
     return NextResponse.json({ result: "Ask what kind of piece they are looking for." });
   }
 
@@ -33,13 +40,14 @@ export async function POST(req: Request) {
     return NextResponse.json({ result: "Availability can't be checked right now. Offer a callback." });
   }
 
-  // In-stock pieces matching type (+stone), grouped by shop — booleans only.
+  // In-stock pieces matching keywords/type (+stone), grouped by shop — booleans only.
   let query = db
     .from("pieces")
     .select("current_shop_id")
     .eq("status", "in_stock")
-    .gt("quantity", 0)
-    .ilike("type", `%${type}%`);
+    .gt("quantity", 0);
+  if (type) query = query.ilike("type", `%${type}%`);
+  for (const w of keywords) query = query.ilike("description", `%${w}%`);
   if (stone) query = query.ilike("main_stone", `%${stone}%`);
   const first = await query.limit(1000);
   if (first.error) {
@@ -47,10 +55,11 @@ export async function POST(req: Request) {
   }
   let pieces = first.data;
 
-  // Stone data is sparse in inventory — if a stone filter finds nothing but the
-  // piece type IS stocked, fall back to type-level availability with a caveat.
+  // Data is sparse (no stone values; descriptions vary) — degrade gracefully:
+  // exact-piece/stone miss falls back to broader matches with a caveat.
   let stoneUnconfirmed = false;
-  if (stone && (pieces ?? []).length === 0) {
+  let keywordsMissed = false;
+  if ((pieces ?? []).length === 0 && (stone || keywords.length) && type) {
     const fallback = await db
       .from("pieces")
       .select("current_shop_id")
@@ -60,7 +69,8 @@ export async function POST(req: Request) {
       .limit(1000);
     if (!fallback.error && (fallback.data ?? []).length > 0) {
       pieces = fallback.data;
-      stoneUnconfirmed = true;
+      if (stone) stoneUnconfirmed = true;
+      if (keywords.length) keywordsMissed = true;
     }
   }
 
@@ -75,10 +85,14 @@ export async function POST(req: Request) {
       )
     : null;
 
-  const piece = stone && !stoneUnconfirmed ? `${stone} ${type}` : type;
-  const caveat = stoneUnconfirmed
-    ? ` Note: you can't confirm the exact stone from here — say the boutique will confirm ${stone} options when they visit or call back.`
-    : "";
+  const described = keywords.length && !keywordsMissed ? `that piece (${keywords.join(" ")})` : "";
+  const piece =
+    described || (stone && !stoneUnconfirmed ? `${stone} ${type}` : type || keywords.join(" "));
+  let caveat = "";
+  if (stoneUnconfirmed)
+    caveat += ` Note: you can't confirm the exact stone from here — say the boutique will confirm ${stone} options when they visit or call back.`;
+  if (keywordsMissed)
+    caveat += ` Note: the exact piece they described didn't match by name, so this is availability for ${type}s in general — the boutique can confirm the specific piece.`;
   let result: string;
   if (wanted) {
     if (shopIdsWithStock.has(wanted.id)) {
