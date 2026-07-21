@@ -19,7 +19,7 @@ in-person viewings.
 2. Opal Grande — inside the Opal Grand Resort, Delray Beach, FL
 3. Jupiter 1 — inside the Jupiter Beach Resort, Jupiter, FL
 4. Jupiter 2 — second boutique inside the Jupiter Beach Resort, Jupiter, FL
-5. Olde Naples Hotel — Naples, FL
+5. Olde Naples Hotel — 200 Broad Ave S, Naples, FL 34102 (boutique phone: +1 239-276-7550)
 
 ## What we sell
 Fine jewelry: necklaces, earrings, rings, bracelets, pendants, chokers, and
