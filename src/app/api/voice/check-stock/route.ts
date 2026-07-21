@@ -45,7 +45,7 @@ export async function POST(req: Request) {
   // "Necklace" in inventory — don't let the type filter starve a keyword hit.
   let query = db
     .from("pieces")
-    .select("current_shop_id")
+    .select("current_shop_id, description")
     .eq("status", "in_stock")
     .gt("quantity", 0);
   if (keywords.length) {
@@ -67,7 +67,7 @@ export async function POST(req: Request) {
   if ((pieces ?? []).length === 0 && (stone || keywords.length) && type) {
     const fallback = await db
       .from("pieces")
-      .select("current_shop_id")
+      .select("current_shop_id, description")
       .eq("status", "in_stock")
       .gt("quantity", 0)
       .ilike("type", `%${type}%`)
@@ -98,17 +98,36 @@ export async function POST(req: Request) {
     caveat += ` Note: you can't confirm the exact stone from here — say the boutique will confirm ${stone} options when they visit or call back.`;
   if (keywordsMissed)
     caveat += ` Note: the exact piece they described didn't match by name, so this is availability for ${type}s in general — the boutique can confirm the specific piece.`;
+  // Honest scale without exact counts: singular vs a-few vs selection, with
+  // short descriptions when the match set is small. Counts/SKUs/prices stay banned.
+  function describeScope(rows: { description: string | null }[]): string {
+    const n = rows.length;
+    const descs = rows
+      .map((r) => (r.description || "").trim())
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((d) => d.toLowerCase());
+    if (n === 1) {
+      return ` Exactly one matching piece there${descs[0] ? ` — described as "${descs[0]}"` : ""}. Use SINGULAR phrasing (say "a piece"/"a ring", never "rings" plural or "a selection"). Never say counts, item numbers, or prices.`;
+    }
+    if (n <= 4) {
+      return ` A few matching pieces there${descs.length ? ` — e.g. "${descs.join('", "')}"` : ""}. Say "a few options", not a big selection. Never say counts, item numbers, or prices.`;
+    }
+    return ` A good selection there. Never say counts, item numbers, or prices.`;
+  }
+
   let result: string;
   if (wanted) {
     if (shopIdsWithStock.has(wanted.id)) {
-      result = `Yes — ${piece} available at ${wanted.name}.${caveat}`;
+      const atShop = (pieces ?? []).filter((p) => p.current_shop_id === wanted.id);
+      result = `Yes — ${piece} available at ${wanted.name}.${describeScope(atShop)}${caveat}`;
     } else if (available.length) {
       result = `Not at ${wanted.name} right now, but available at: ${available.join(", ")}. Offer those locations.${caveat}`;
     } else {
       result = `No ${piece} available at any location right now. Offer to arrange a callback when new pieces arrive.`;
     }
   } else if (available.length) {
-    result = `${piece} available at: ${available.join(", ")}. Ask which location suits them.${caveat}`;
+    result = `${piece} available at: ${available.join(", ")}. Ask which location suits them.${describeScope(pieces ?? [])}${caveat}`;
   } else {
     result = `No ${piece} available at any location right now. Offer to arrange a callback.`;
   }
