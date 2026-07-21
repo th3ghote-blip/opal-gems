@@ -6,7 +6,8 @@ type TemplateKey =
   | "sale_alert"
   | "movement_request"
   | "discount_request"
-  | "wishlist_added";
+  | "wishlist_added"
+  | "viewing_request";
 
 interface Templates {
   sale_alert: {
@@ -40,6 +41,13 @@ interface Templates {
     customer: string;
     description: string;
   };
+  viewing_request: {
+    caller: string;
+    phone: string;
+    shop: string;
+    timeframe?: string;
+    interest?: string;
+  };
 }
 
 function subject<K extends TemplateKey>(key: K, p: Templates[K]): string {
@@ -59,6 +67,10 @@ function subject<K extends TemplateKey>(key: K, p: Templates[K]): string {
     case "wishlist_added": {
       const x = p as Templates["wishlist_added"];
       return `⭐ Wishlist — ${x.customer}`;
+    }
+    case "viewing_request": {
+      const x = p as Templates["viewing_request"];
+      return `📅 Viewing request — ${x.caller} at ${x.shop}`;
     }
   }
   return "Opal Gems notification";
@@ -105,6 +117,17 @@ function plainBody<K extends TemplateKey>(key: K, p: Templates[K]): string {
         x.description,
       ].join("\n");
     }
+    case "viewing_request": {
+      const x = p as Templates["viewing_request"];
+      return [
+        `📅 Opal Gems — VIEWING REQUEST`,
+        `${x.caller} (${x.phone})`,
+        `Store: ${x.shop}`,
+        x.timeframe ? `When: ${x.timeframe}` : null,
+        x.interest ? `Interested in: ${x.interest}` : null,
+        `(taken by phone receptionist)`,
+      ].filter(Boolean).join("\n");
+    }
   }
   return "";
 }
@@ -146,6 +169,14 @@ function htmlBody<K extends TemplateKey>(key: K, p: Templates[K]): string {
       return wrap(`
         <h2 style="margin:0 0 8px;font-size:18px">⭐ Wishlist entry</h2>
         <p style="margin:0"><strong>${x.staff}</strong> added a request for <strong>${x.customer}</strong>:<br>${x.description}</p>
+      `);
+    }
+    case "viewing_request": {
+      const x = p as Templates["viewing_request"];
+      return wrap(`
+        <h2 style="margin:0 0 8px;font-size:18px">📅 Viewing request</h2>
+        <p style="margin:0"><strong>${x.caller}</strong> (${x.phone}) would like to visit <strong>${x.shop}</strong>.${x.timeframe ? `<br>When: ${x.timeframe}` : ""}${x.interest ? `<br>Interested in: ${x.interest}` : ""}</p>
+        <p style="margin:8px 0 0;color:#737373;font-size:13px">Taken by the phone receptionist.</p>
       `);
     }
   }
