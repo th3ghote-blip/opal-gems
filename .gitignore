@@ -37,3 +37,4 @@ next-env.d.ts
 
 .vercel
 .receptionist-api-key.txt
+.voice-secret.txt
