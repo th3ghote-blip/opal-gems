@@ -41,9 +41,26 @@ export async function POST(req: Request) {
     .gt("quantity", 0)
     .ilike("type", `%${type}%`);
   if (stone) query = query.ilike("main_stone", `%${stone}%`);
-  const { data: pieces, error } = await query.limit(1000);
+  let { data: pieces, error } = await query.limit(1000);
   if (error) {
     return NextResponse.json({ result: "Availability can't be checked right now. Offer a callback." });
+  }
+
+  // Stone data is sparse in inventory — if a stone filter finds nothing but the
+  // piece type IS stocked, fall back to type-level availability with a caveat.
+  let stoneUnconfirmed = false;
+  if (stone && (pieces ?? []).length === 0) {
+    const fallback = await db
+      .from("pieces")
+      .select("current_shop_id")
+      .eq("status", "in_stock")
+      .gt("quantity", 0)
+      .ilike("type", `%${type}%`)
+      .limit(1000);
+    if (!fallback.error && (fallback.data ?? []).length > 0) {
+      pieces = fallback.data;
+      stoneUnconfirmed = true;
+    }
   }
 
   const shopIdsWithStock = new Set((pieces ?? []).map((p) => p.current_shop_id));
@@ -57,18 +74,21 @@ export async function POST(req: Request) {
       )
     : null;
 
-  const piece = stone ? `${stone} ${type}` : type;
+  const piece = stone && !stoneUnconfirmed ? `${stone} ${type}` : type;
+  const caveat = stoneUnconfirmed
+    ? ` Note: you can't confirm the exact stone from here — say the boutique will confirm ${stone} options when they visit or call back.`
+    : "";
   let result: string;
   if (wanted) {
     if (shopIdsWithStock.has(wanted.id)) {
-      result = `Yes — ${piece} available at ${wanted.name}.`;
+      result = `Yes — ${piece} available at ${wanted.name}.${caveat}`;
     } else if (available.length) {
-      result = `Not at ${wanted.name} right now, but available at: ${available.join(", ")}. Offer those locations.`;
+      result = `Not at ${wanted.name} right now, but available at: ${available.join(", ")}. Offer those locations.${caveat}`;
     } else {
       result = `No ${piece} available at any location right now. Offer to arrange a callback when new pieces arrive.`;
     }
   } else if (available.length) {
-    result = `${piece} available at: ${available.join(", ")}. Ask which location suits them.`;
+    result = `${piece} available at: ${available.join(", ")}. Ask which location suits them.${caveat}`;
   } else {
     result = `No ${piece} available at any location right now. Offer to arrange a callback.`;
   }
