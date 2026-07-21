@@ -26,6 +26,8 @@ export async function POST(req: Request) {
     .split(/\s+/)
     .filter((w) => w.length > 2)
     .slice(0, 5);
+  // "ring" must not substring-match "earrings": singularize then prefix-match.
+  const typePrefix = type.toLowerCase().replace(/[%_]/g, "").replace(/s$/, "");
   if (!type && !keywords.length) {
     return NextResponse.json({ result: "Ask what kind of piece they are looking for." });
   }
@@ -51,7 +53,7 @@ export async function POST(req: Request) {
   if (keywords.length) {
     for (const w of keywords) query = query.ilike("description", `%${w}%`);
   } else if (type) {
-    query = query.ilike("type", `%${type}%`);
+    query = query.ilike("type", `${typePrefix}%`);
   }
   if (stone) query = query.ilike("main_stone", `%${stone}%`);
   const first = await query.limit(1000);
@@ -70,7 +72,7 @@ export async function POST(req: Request) {
       .select("current_shop_id, description")
       .eq("status", "in_stock")
       .gt("quantity", 0)
-      .ilike("type", `%${type}%`)
+      .ilike("type", `${typePrefix}%`)
       .limit(1000);
     if (!fallback.error && (fallback.data ?? []).length > 0) {
       pieces = fallback.data;
