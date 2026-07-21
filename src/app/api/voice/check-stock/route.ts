@@ -41,13 +41,18 @@ export async function POST(req: Request) {
   }
 
   // In-stock pieces matching keywords/type (+stone), grouped by shop — booleans only.
+  // Keywords take priority: a "pendant" the caller describes may be typed as
+  // "Necklace" in inventory — don't let the type filter starve a keyword hit.
   let query = db
     .from("pieces")
     .select("current_shop_id")
     .eq("status", "in_stock")
     .gt("quantity", 0);
-  if (type) query = query.ilike("type", `%${type}%`);
-  for (const w of keywords) query = query.ilike("description", `%${w}%`);
+  if (keywords.length) {
+    for (const w of keywords) query = query.ilike("description", `%${w}%`);
+  } else if (type) {
+    query = query.ilike("type", `%${type}%`);
+  }
   if (stone) query = query.ilike("main_stone", `%${stone}%`);
   const first = await query.limit(1000);
   if (first.error) {
