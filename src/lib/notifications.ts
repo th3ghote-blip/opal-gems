@@ -303,7 +303,14 @@ export async function notifyOwner<K extends TemplateKey>(
   // Comma-separated list: "email,whatsapp" sends both in parallel.
   // Falls back to legacy NOTIFICATION_CHANNEL (singular).
   const raw = (process.env.NOTIFICATION_CHANNELS || process.env.NOTIFICATION_CHANNEL || "email").toLowerCase();
-  const channels = raw.split(",").map((c) => c.trim()).filter(Boolean);
+  let channels = raw.split(",").map((c) => c.trim()).filter(Boolean);
+
+  // Twilio (WhatsApp/SMS) is opt-in and OFF by default: undelivered WhatsApp
+  // messages are still billed, so it stays disabled unless ENABLE_TWILIO=true.
+  if (process.env.ENABLE_TWILIO !== "true") {
+    channels = channels.filter((c) => c !== "whatsapp" && c !== "sms");
+    if (channels.length === 0) channels = ["email"];
+  }
   const results = await Promise.allSettled(
     channels.map((ch) => {
       if (ch === "email") return sendEmail(key, payload);
