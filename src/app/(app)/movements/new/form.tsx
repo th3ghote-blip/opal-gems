@@ -20,11 +20,14 @@ export function NewMovementForm({ pieces, shops, defaultFromShopId }: { pieces: 
   const router = useRouter();
   const [pending, start] = useTransition();
   const [err, setErr] = useState<string | null>(null);
+  const [fromShopId, setFromShopId] = useState<string>(
+    defaultFromShopId && shops.some((s) => s.id === defaultFromShopId) ? defaultFromShopId : ""
+  );
   const [pieceId, setPieceId] = useState<string>("");
   const [type, setType] = useState<string>("transfer");
 
-  const selectedPiece = pieces.find((p) => p.id === pieceId);
-  const fromShopId = selectedPiece?.current_shop_id ?? defaultFromShopId;
+  // Only pieces physically at the chosen "from" shop are selectable.
+  const shopPieces = pieces.filter((p) => p.current_shop_id === fromShopId);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -56,10 +59,33 @@ export function NewMovementForm({ pieces, shops, defaultFromShopId }: { pieces: 
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <div>
+        <label className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">From shop *</label>
+        <select
+          required
+          value={fromShopId}
+          onChange={(e) => { setFromShopId(e.target.value); setPieceId(""); }}
+          className={inputCls}
+        >
+          <option value="">— Where is the piece now? —</option>
+          {shops.map((s) => (
+            <option key={s.id} value={s.id}>{s.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
         <label className="block text-xs text-neutral-600 dark:text-neutral-400 mb-1">Piece *</label>
-        <select required value={pieceId} onChange={(e) => setPieceId(e.target.value)} className={inputCls}>
-          <option value="">— Select a piece —</option>
-          {pieces.map((p) => (
+        <select
+          required
+          value={pieceId}
+          onChange={(e) => setPieceId(e.target.value)}
+          disabled={!fromShopId}
+          className={inputCls + " disabled:opacity-50"}
+        >
+          <option value="">
+            {!fromShopId ? "— Pick a shop first —" : shopPieces.length === 0 ? "— No pieces at this shop —" : "— Select a piece —"}
+          </option>
+          {shopPieces.map((p) => (
             <option key={p.id} value={p.id}>{p.sku} · {p.type}</option>
           ))}
         </select>
