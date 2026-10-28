@@ -96,5 +96,14 @@
       Verifying `theopalgems.com` needs DNS access the client would have to give.
 - [ ] First live run goes to `sales@theopalgems.com` — confirm that is wanted
       before Monday, or change `--to` in the task's STEP 8.
-- [ ] Optional: music bed on the video (currently silent, which suits muted
-      autoplay but a track would lift it)
+- [x] Music mixing built into `stitch-ad.py` (`--music`, `--music-db`) and
+      verified: 14.1s output with an AAC stream, gain exact (source peak
+      -18.5 dB -> output -24.5 dB at -6 dB)
+- [ ] **Source an actual music track.** Higgsfield cannot generate one on this
+      account: the full audio catalogue is 8 models, all text-to-speech;
+      `sonilo_music` / `mirelo_text_to_audio` are flagged "Game pipeline only"
+      and the tool contract forbids standalone use. Needs a licensed track
+      (Epidemic Sound ~$15/mo recommended) dropped into `marketing/music/`.
+- [ ] Decide on native clip audio: Kling `sound:"on"` costs 10 credits vs 7.5
+      and yields ambient foley, not music (tested: mean -33.8 dB, max -11.3 dB).
+      Currently OFF in the task.

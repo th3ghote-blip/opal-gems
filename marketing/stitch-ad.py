@@ -29,6 +29,10 @@ def main() -> None:
     ap.add_argument("--clip-seconds", type=float, default=4.0)
     ap.add_argument("--card-seconds", type=float, default=3.0)
     ap.add_argument("--xfade", type=float, default=0.3)
+    ap.add_argument("--music", default=None,
+                    help="audio bed (mp3/wav). Trimmed to length, faded in and out.")
+    ap.add_argument("--music-db", type=float, default=-6.0,
+                    help="gain applied to the bed, in dB")
     args = ap.parse_args()
 
     here = Path(__file__).resolve().parent
@@ -69,10 +73,27 @@ def main() -> None:
         dur = args.card_seconds if i == n - 1 else args.clip_seconds
         offset += dur - args.xfade
 
+    # Total runtime: every segment end to end, minus one overlap per cross-fade.
+    total = (args.clip_seconds * len(clips) + args.card_seconds
+             - args.xfade * (n - 1))
+
+    music = rel(args.music) if args.music else None
+    if music and not music.exists():
+        sys.exit(f"missing music: {music}")
+
+    if music:
+        cmd += ["-i", str(music)]
+        fade_out_at = max(0.0, total - 1.5)
+        parts.append(
+            f"[{n}:a]atrim=0:{total:.3f},asetpts=PTS-STARTPTS,"
+            f"volume={args.music_db}dB,"
+            f"afade=t=in:st=0:d=0.8,"
+            f"afade=t=out:st={fade_out_at:.3f}:d=1.5[aout]"
+        )
+
+    cmd += ["-filter_complex", ";".join(parts), "-map", "[vout]"]
+    cmd += ["-map", "[aout]", "-c:a", "aac", "-b:a", "192k", "-shortest"] if music else ["-an"]
     cmd += [
-        "-filter_complex", ";".join(parts),
-        "-map", "[vout]",
-        "-an",
         "-c:v", "libx264", "-preset", "slow", "-crf", "19",
         "-movflags", "+faststart",
         str(out),
