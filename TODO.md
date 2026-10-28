@@ -71,3 +71,30 @@
 - [ ] Edit settings (commission %, discount threshold)
 - [ ] Shops CRUD
 - [ ] Staff CRUD (invite + promote)
+
+---
+
+> **Note (2026-10-28):** Phases 0–8 above are stale. They describe the original
+> 3-shop build; the app has been live on Vercel for months with 5 shops,
+> analytics, stock counts, settings and an activity log all shipped. Treat that
+> list as historical, not as open work.
+
+## Marketing automation (2026-10-28)
+
+- [x] 20 brand photos stored in `marketing/photos/` (`ls marketing/photos | wc -l` → 20)
+- [x] `marketing/brief.md` — brand rules, photo catalogue, prompt rules
+- [x] `marketing/make-endcard.py` — composites crisp end-card type over a
+      generated backdrop (generated lettering garbles)
+- [x] `marketing/stitch-ad.py` — trims, normalises and cross-fades clips + end
+      card into 1080x1920 (verified: 14.1s, 6.40 MB output)
+- [x] `marketing/send-assets.py` — emails assets via Resend
+      (verified: message id 01a18363-68f8-7e0e-aaed-4e4ab5fbcf8b)
+- [x] Scheduled task `opal-gems-weekly-ads`, Mondays 09:10 Spain time
+- [ ] **Decide the email sender.** Sending from `opal@nifield.com` because
+      `vicidialintelligence.com` (the app's `RESEND_FROM`) is NOT verified in
+      Resend, and `nifield.com` is the only verified domain on the account.
+      Verifying `theopalgems.com` needs DNS access the client would have to give.
+- [ ] First live run goes to `sales@theopalgems.com` — confirm that is wanted
+      before Monday, or change `--to` in the task's STEP 8.
+- [ ] Optional: music bed on the video (currently silent, which suits muted
+      autoplay but a track would lift it)
