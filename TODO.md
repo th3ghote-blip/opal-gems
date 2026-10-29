@@ -194,6 +194,20 @@
       still carry the default bare face and loose waves from the portrait, the
       same fault just fixed on the opera. ~0.75 credits to redo all three with
       per-setting wardrobe, hair and makeup.
+- [x] **First fully bespoke advert built** (29 Oct, 30.5 credits): hook ->
+      reveal -> hand to collarbone -> macro stone -> card, `out/opal-evening.mp4`.
+      Verified 17.1s, 1080x1920, video + audio, -14 LUFS, styling continuous
+      across all four beats. Campaign line "Some evenings ask for diamonds."
+- [ ] **Resolve the Kling model/resolution question — affects every advert.**
+      Measured: `kling3_0` `mode: std` returns **784x1176**, and `stitch-ad.py`
+      upscales ~1.38x to reach 1080x1920. That is the source of any softness.
+      Priced 29 Oct: std 7.5, **pro 8.75**, **kling4_0 1080p 16.25** per 5s.
+      `kling4_0` additionally takes up to seven `image_references` (pieces carried
+      into the motion, not just the start frame) and runs to 30s.
+      Next step: one `pro` clip and one `kling4_0` clip from the same start frame,
+      ~25 credits, then compare resolution and quality before committing.
+      If `pro` returns native 1080p, that is +1.25/clip (+5/advert) for a 38%
+      resolution gain — the cheapest possible win. Needs Andrew's go.
 - [x] **Rings verified** (29 Oct, 1 credit). Both the emerald-cut and the round
       brilliant came back accurate — correct step cut, four claws, pavé band —
       and hand anatomy was clean in all four images, which was the real risk.

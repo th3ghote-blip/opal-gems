@@ -48,6 +48,24 @@ and look wrong; the product-only shots are both safer and more on-brand.
 
 1. **One vertical video** — 9:16, 5s, silent, for Reels/TikTok/Stories.
    Model `kling3_0`, `mode: std`, `sound: off`, the chosen photo as `start_image`.
+
+   **Known limitation:** `kling3_0` at `mode: std` returns **784x1176**, not
+   1080x1920 — measured on every clip generated so far. `stitch-ad.py` then
+   scales it up about 1.38x, which is where the softness comes from. Options,
+   priced by `get_cost` on 29 Oct:
+
+   | Model / mode | Credits per 5s | Native resolution |
+   |---|---|---|
+   | `kling3_0` std | 7.5 | 784x1176 (confirmed) |
+   | `kling3_0` pro | 8.75 | unmeasured |
+   | `kling3_0` 4k | unpriced | unmeasured |
+   | `kling4_0` 1080p | 16.25 | 1080p per the catalogue, unmeasured |
+
+   `kling4_0` also accepts up to seven `image_references`, so the model and the
+   real pieces could be carried into the motion itself rather than only through a
+   start frame, and runs to 30s. Untested. Resolve this with one `pro` clip and
+   one `kling4_0` clip from the same start frame before committing a campaign to
+   either.
 2. **Two still adverts** — 4:5 for feed posts. Model `gpt_image_2_5`, the chosen
    photo as `image_references`.
 
