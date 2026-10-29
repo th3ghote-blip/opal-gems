@@ -63,6 +63,17 @@ and look wrong; the product-only shots are both safer and more on-brand.
   Leave clear empty space in the composition and add the wordmark in post.
 - Keep the camera instruction to one clause. A move and a locked frame are two
   different generations.
+- **For any architectural setting, state where the camera is, how much of a
+  foreground object is in frame, and where the background sits relative to the
+  subject.** Naming a feature without this produces impossible geometry: "stands
+  at the velvet rail of a theatre box" with "behind her the gilded tiers" came
+  back reading as a woman standing behind a seat back, because the rail was put
+  in the foreground and the auditorium at the same height behind her. The fix
+  that worked: "the camera is inside the box with her, at her eye level, facing
+  her. A red velvet parapet crosses the very bottom edge of the frame at her hip
+  height, with only its padded top edge visible. Far past her shoulder and well
+  below her, the tiers recede." Or pick a setting with simpler geometry - a
+  staircase landing needs none of this.
 - No prices, no claims about carat or value, no invented boutique names.
 
 ## Cost

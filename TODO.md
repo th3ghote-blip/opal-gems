@@ -164,16 +164,34 @@
       `gpt_image_2_5`). Deliberately four different women, none a lookalike of
       the real shoot model, all framed bare-necked and bare-eared so real pieces
       composite cleanly. In `marketing/out/models/`.
-- [ ] **Andrew picks a model (1-4).** Then: create a reference Element from that
-      portrait (`manage_reference_elements` action=create), after which
-      `<<<element_id>>>` in any prompt reproduces the same woman. Scene stills
-      cost 0.25 and clips 7.5, so wardrobe and location stop being limited by
-      the shoot. This is what makes "restaurant with a view" and "opera box"
-      deliverable.
-- [ ] **Unverified: whether a real piece survives a restage.** The whole approach
-      rests on `gpt_image_2_5` holding the actual jewellery when the photo is
-      passed as `image_references`. Planned 1-credit / 4-image test, not yet run.
-      Do not scale up before it passes.
+- [x] **Model chosen: candidate 2, the honey-blonde** (Andrew, 29 Oct).
+      Uploaded as media `cdf797d0-15bc-49ea-a943-ccf29f80c620` and reused as an
+      `image_references` input on every scene since.
+- [x] **Restage test PASSED** (29 Oct, 1 credit, 4 x 0.25). Passing her portrait
+      and photo 2 together as two `image_references` to `gpt_image_2_5`
+      reproduced the same woman AND kept the real diamond Y-necklace — correct
+      line of round stones, tapering Y drop, correct length — in four locations
+      that do not exist in the shoot: restaurant at dusk, opera box, yacht deck,
+      boutique. Checked by eye, all four. Files in `marketing/out/scenes/`.
+      Note: `gpt_image_2_5` is NOT on the reference-Element supported list, so no
+      Element was needed — the portrait as an image reference was enough.
+      Elements-capable models are pricier (`gpt_image_2` 0.5, `nano_banana_pro` 2).
+- [x] **Opera-box geometry fixed** (29 Oct, 0.75 credits). The first attempt read
+      as a woman standing behind a seat back. Cause: the prompt named a
+      foreground rail without stating camera position, how much of the rail was
+      in frame, or the background's height relative to her. Three re-takes with
+      those stated all read correctly. Rule added to `brief.md`.
+- [ ] **UNEXPLAINED SPEND — needs Andrew.** Balance went 4,483.03 -> 3,786.53
+      today (696.50). Only 114.5 of that is this session's
+      (15 x 7.5 Kling + 8 x 0.25 GPT Image 2.5, all preflighted). The rest is
+      ~580 in models this session never called: **Seedance 2.5 x10 = 560** and
+      **Nano Banana Pro x10 = 20**, timestamped 14:01:53-14:10:03 UTC — the
+      Seedance burst starting BEFORE this session's first Kling call at 14:05:41.
+      Something else is using the Higgsfield account (another session, a task, or
+      the web UI). One caveat: a lone Nano charge at 14:27:33 sits near a
+      `get_cost` preflight of `nano_banana_pro`; `get_cost` is documented not to
+      submit, and the timing is not a clean match, but 2 credits cannot be fully
+      ruled out. Not the 580.
 - [ ] Synthetic models in a client's advertising: worth one line to the client,
       since some platforms require synthetic-media disclosure on ads. Not a
       blocker, their call.
