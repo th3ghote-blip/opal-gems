@@ -306,10 +306,15 @@
       — now a rule in `brief.md`. Re-check the delivered adverts
       (`opal-rooftop`, `opal-candlelit`, `opal-theone`, `opal-theset`) the same
       way before any of them goes to the client.
-- [ ] **Rebuild the candlelit advert with the hoop.** `out/opal-candlelit.mp4`
-      still contains the detached and glowing climber. Needs the half and
-      throat beats re-stilled with SKU 114169 plus the reflect-not-emit wording,
-      then re-animated and re-stitched: ~2 stills + 2 pro clips, ~18 credits. Same start frame as
+- [x] **Transition advert built with every correction** (29 Oct, 35.75 credits:
+      3 stills + 4 pro clips). `out/opal-walkout.mp4` — cabinet, clasps it on,
+      cut to the candlelit dinner, throat macro, hand macro, card. Verified
+      18.5s, 1080x1920, audio at -14.2 LUFS. Supersedes `opal-candlelit.mp4`,
+      which still carries the detached glowing climber and should not be used.
+      Applied: hoop earrings (SKU 114169) instead of the climber, reflect-not-emit
+      wording, stated bent-elbow poses, stated piece dimensions, daywear named
+      structurally, hair named per beat, all four pieces present, and a 3x
+      magnification check on the stills before any clip was paid for. Same start frame as
       the `pro` earring macro plus the earrings photo as an `image_reference`, to
       test the one thing `pro` cannot do — carrying a real piece through the
       motion rather than only in the start frame. Compare resolution and piece
