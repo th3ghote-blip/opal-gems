@@ -7,6 +7,7 @@ next. The end card is a still, held for --card-seconds.
         --card out/endcard.png --out out/opal-ad.mp4
 """
 import argparse
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -21,6 +22,25 @@ def run(cmd: list[str]) -> None:
         sys.exit(f"ffmpeg failed ({proc.returncode}):\n{tail}")
 
 
+def measure(path: Path, start: float, dur: float) -> tuple[float, float]:
+    """Integrated loudness (LUFS) and true peak (dBFS) of one excerpt."""
+    proc = subprocess.run(
+        ["ffmpeg", "-hide_banner", "-nostats", "-ss", f"{start:.3f}",
+         "-t", f"{dur:.3f}", "-i", str(path),
+         "-af", "ebur128=peak=true:framelog=quiet", "-f", "null", "-"],
+        capture_output=True, text=True,
+    )
+
+    def grab(label: str) -> float:
+        m = re.search(rf"\n\s*{label}:\s*(-?[\d.]+)", proc.stderr)
+        if not m:
+            sys.exit(f"could not measure {label} of {path.name}:\n"
+                     f"{proc.stderr[-800:]}")
+        return float(m.group(1))
+
+    return grab("I"), grab("Peak")
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--clips", nargs="+", required=True)
@@ -31,11 +51,18 @@ def main() -> None:
     ap.add_argument("--xfade", type=float, default=0.3)
     ap.add_argument("--music", default=None,
                     help="audio bed (mp3/wav). Trimmed to length, faded in and out.")
-    # 0 dB, not a ducked -6: the music is the only audio in the advert, so there
-    # is nothing for it to sit under. make-music.py already lands it at
-    # -1.5 dBFS peak / -11.4 LUFS.
+    ap.add_argument("--music-start", type=float, default=0.0,
+                    help="seconds into the track to start. A track's intro is "
+                         "usually too sparse for a 14s cut")
+    ap.add_argument("--music-lufs", type=float, default=-14.0,
+                    help="integrated loudness to gain the excerpt to. -14 LUFS "
+                         "is what Instagram and TikTok normalise to, so the "
+                         "advert arrives at the level the platform wants")
+    # An offset on top of the measured gain, not an absolute level. 0 because
+    # the music is the only audio in the advert - there is no dialogue to duck
+    # under.
     ap.add_argument("--music-db", type=float, default=0.0,
-                    help="gain applied to the bed, in dB")
+                    help="extra trim applied after loudness matching, in dB")
     args = ap.parse_args()
 
     here = Path(__file__).resolve().parent
@@ -85,11 +112,24 @@ def main() -> None:
         sys.exit(f"missing music: {music}")
 
     if music:
-        cmd += ["-i", str(music)]
+        # Library tracks arrive mastered anywhere from -8 to -24 LUFS, so the
+        # excerpt is measured and gained to a fixed target rather than trusted.
+        # Static gain, not loudnorm: one-pass loudnorm pumps audibly over a
+        # window this short.
+        lufs, peak = measure(music, args.music_start, total)
+        gain = args.music_lufs - lufs + args.music_db
+        headroom = -1.0 - (peak + gain)
+        if headroom < 0:
+            gain += headroom          # give up loudness before ever clipping
+        print(f"music: {music.name} from {args.music_start:g}s - "
+              f"measured {lufs:.1f} LUFS, peak {peak:.1f} dBFS - "
+              f"gain {gain:+.1f} dB -> {lufs + gain:.1f} LUFS")
+
+        cmd += ["-ss", f"{args.music_start:.3f}", "-i", str(music)]
         fade_out_at = max(0.0, total - 1.5)
         parts.append(
             f"[{n}:a]atrim=0:{total:.3f},asetpts=PTS-STARTPTS,"
-            f"volume={args.music_db}dB,"
+            f"volume={gain:.2f}dB,"
             f"afade=t=in:st=0:d=0.8,"
             f"afade=t=out:st={fade_out_at:.3f}:d=1.5[aout]"
         )

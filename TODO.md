@@ -101,15 +101,23 @@
       AAC stereo stream at -11.1 LUFS / -1.5 dBFS peak, audio present in all
       four sections. `--music-db` default changed -6 -> 0 (there is no dialogue
       for the bed to duck under). The mixer is DONE; it only needs a file.
-- [ ] **Source an actual music track.** Higgsfield cannot generate one on this
-      account: re-checked 29 Oct, the audio catalogue is 8 models, all speech;
-      `sonilo_music` / `mirelo_text_to_audio` are flagged "Game pipeline only".
-      TikTok's Commercial Music Library (`tiktok_music_trending`) is publish-only
-      — tracks cannot be exported into the emailed file. Synthesising a celeste
-      bed was tried on 29 Oct and **rejected by Andrew as sounding cheap**; the
-      script was deleted and the weekly task now forbids it. Needs a real
-      licensed track dropped into `marketing/music/`.
-      Blocked on Andrew: paid library (~$15/mo) vs free-for-commercial vs his own file.
+- [x] Loudness matching in `stitch-ad.py` (`--music-start`, `--music-lufs`).
+      Library tracks measured 15 dB apart (-8.3 to -19.1 LUFS over the same 14s
+      window), so the excerpt is now measured and gained to a target rather than
+      trusted, and gives up loudness before clipping. Verified on four tracks:
+      three landed at -14.2/-14.2/-14.3 LUFS, the fourth at -16.0 because its
+      -4.5 dBFS peaks would not take the full gain (correct, and reported).
+- [x] Four instrumental candidates sourced under the Pixabay Content License
+      (commercial use, no attribution; licence terms and limits recorded in
+      `marketing/music/README.md` with each track's author and page)
+- [ ] **Andrew picks a track (A/B/C/D).** Four cuts of the same ad sent 29 Oct.
+      On his answer: copy that mp3 into `marketing/music/`, add
+      `--music music/<track>.mp3 --music-start <n>` to STEP 6 of the
+      `opal-gems-weekly-ads` task, and commit the file.
+      Until then Monday's run emails a SILENT advert — the task currently says
+      to add music only if a real track is present.
+      A synthesised celeste bed was tried on 29 Oct and **rejected by Andrew as
+      sounding cheap**; the generator was deleted and the task forbids it.
 - [ ] Decide on native clip audio: Kling `sound:"on"` costs 10 credits vs 7.5
       and yields ambient foley, not music (tested: mean -33.8 dB, max -11.3 dB).
       Currently OFF in the task.
