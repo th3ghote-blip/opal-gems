@@ -139,6 +139,17 @@ references for the piece.
 - **Earrings need the hair up.** An earring behind loose hair is invisible. Say
   the hair is lifted clear of the ear and neck, and turn the head a little to one
   side so one ear is square to the camera.
+- **Name a garment that cannot be mistaken for nightwear.** "A soft cream silk
+  camisole" came back reading as pyjamas - satin, thin straps, loose hair. For
+  daywear say what it structurally is: "a crisp white cotton shirt with the collar
+  open at the throat and the sleeves turned back at the cuffs", a tailored blazer,
+  a fine knit. Collars, cuffs and tailoring are what read as dressed; drape and
+  spaghetti straps read as bed.
+- **The moderation filter false-positives on close chest framing.** A clasp shot
+  framed "chin to mid-chest" with a second person's hands at the neck came back
+  `nsfw` on an otherwise clean prompt. Raise the crop to the collarbone and have
+  her hold her own hair clear, and it passes. Never re-run the identical prompt
+  after a flag - change one variable so the result means something.
 - Up to three reference images hold at once - the model, a necklace and a ring
   were all preserved in one generation.
 
