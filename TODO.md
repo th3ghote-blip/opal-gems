@@ -110,14 +110,19 @@
 - [x] Four instrumental candidates sourced under the Pixabay Content License
       (commercial use, no attribution; licence terms and limits recorded in
       `marketing/music/README.md` with each track's author and page)
-- [ ] **Andrew picks a track (A/B/C/D).** Four cuts of the same ad sent 29 Oct.
-      On his answer: copy that mp3 into `marketing/music/`, add
-      `--music music/<track>.mp3 --music-start <n>` to STEP 6 of the
-      `opal-gems-weekly-ads` task, and commit the file.
-      Until then Monday's run emails a SILENT advert — the task currently says
-      to add music only if a real track is present.
+- [x] **Track chosen and live: "Minimal Piano" by leberch** (Andrew, 29 Oct —
+      "uplifting but posh"). Committed to `marketing/music/`, baked into STEP 6
+      of the `opal-gems-weekly-ads` task as
+      `--music music/leberch-minimal-piano.mp3 --music-start 10`.
+      Verified by running the task's own STEP 6 command: `out/opal-ad.mp4` is
+      14.1s, `ffprobe` lists codec_type=video AND codec_type=audio, measured
+      -14.2 LUFS / -2.2 dBFS peak. The task now also fails the run rather than
+      emailing a silent advert.
       A synthesised celeste bed was tried on 29 Oct and **rejected by Andrew as
       sounding cheap**; the generator was deleted and the task forbids it.
+- [x] Corrected the run cost in `brief.md`: said "8 credits a run" (written for
+      the old single-clip advert), actually **23.25** — 3 x 7.5 Kling clips +
+      3 x 0.25 GPT Image. Confirmed against the credit ledger. Music is free.
 - [ ] Decide on native clip audio: Kling `sound:"on"` costs 10 credits vs 7.5
       and yields ambient foley, not music (tested: mean -33.8 dB, max -11.3 dB).
       Currently OFF in the task.

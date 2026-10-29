@@ -46,12 +46,18 @@ All four are instrumental, 256 kbps stereo, under the Pixabay Content License.
 Attribution is not required but the author is recorded here so the licence is
 traceable.
 
-| Track | Author | Pixabay page | Len | Window used | Native LUFS |
-|---|---|---|---|---|---|
-| Elegant | AtlasAudio | `/music/modern-classical-elegant-522420/` | 134s | 48s | -8.3 |
-| Minimal Piano | leberch | `/music/modern-classical-minimal-piano-590996/` | 84s | 10s | -16.1 |
-| Soft Piano | leberch | `/music/solo-piano-soft-piano-590997/` | 102s | 60s | -19.1 |
-| Elegant Piano Music | Tunetank | `/music/classical-piano-elegant-piano-music-350061/` | 151s | 48s | -11.8 |
+| | Track | Author | Pixabay page | Len | Window | Native LUFS |
+|---|---|---|---|---|---|---|
+| | Elegant | AtlasAudio | `/music/modern-classical-elegant-522420/` | 134s | 48s | -8.3 |
+| **IN USE** | **Minimal Piano** | **leberch** | `/music/modern-classical-minimal-piano-590996/` | 84s | **10s** | -16.1 |
+| | Soft Piano | leberch | `/music/solo-piano-soft-piano-590997/` | 102s | 60s | -19.1 |
+| | Elegant Piano Music | Tunetank | `/music/classical-piano-elegant-piano-music-350061/` | 151s | 48s | -11.8 |
 
-Only the chosen one gets committed here. A synthesised bed was tried on
-29 Oct and rejected as sounding cheap - do not go back to that.
+**Minimal Piano** is Andrew's pick (29 Oct 2026): "uplifting but posh". It is
+baked into STEP 6 of the `opal-gems-weekly-ads` task as
+
+    --music music/leberch-minimal-piano.mp3 --music-start 10
+
+and lands at -14.2 LUFS in the finished advert. The other three were not
+committed. A synthesised bed was tried on 29 Oct and rejected as sounding cheap
+- do not go back to that.

@@ -67,8 +67,23 @@ and look wrong; the product-only shots are both safer and more on-brand.
 
 ## Cost
 
-7.5 credits for the video, 0.25 per still — **8 credits a run**.
-Check the balance with the `balance` tool; top-ups are Andrew's call, never automatic.
+**23.25 credits a run**, confirmed against the credit ledger:
+
+| Item | Model | Each | Qty | Credits |
+|---|---|---|---|---|
+| scene clips, 5s 9:16 std | `kling3_0` | 7.5 | 3 | 22.50 |
+| end-card backdrop | `gpt_image_2_5` | 0.25 | 1 | 0.25 |
+| still adverts | `gpt_image_2_5` | 0.25 | 2 | 0.50 |
+
+Music costs nothing — the track is a licensed file in `music/` and ffmpeg mixes
+it locally.
+
+`sound: "on"` on a Kling clip costs 10 instead of 7.5 and yields ambient foley,
+not music. It is OFF, and turning it on for all three clips would add 7.5 to the
+run for no benefit.
+
+Check the balance with the `balance` tool; top-ups are Andrew's call, never
+automatic. The task aborts and emails Andrew if the balance is under 100.
 
 ## Delivery
 
