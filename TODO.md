@@ -141,11 +141,42 @@
       rule outright. The showcase pan with the real OPAL GEMS sign is worth
       salvaging as an establishing or closing shot (stabilise, crop out the tags,
       regrade warm). Awaiting Andrew's call on whether to do that.
-- [ ] **Four narrative concepts received from the client (29 Oct)** — "I'm just
-      looking", "Your vacation called", "POV weekend getaway", "The jewelry has
-      plans". Assessment given in chat: the copy is good, the "AI generates the
-      story" framing is not deliverable because the pieces will not stay accurate
-      across invented scenes. Awaiting Andrew's direction.
+- [x] **All four client concepts built** (29 Oct) in the boutique -> try-on ->
+      destination shape, each with its campaign line drawn on the end card:
+      `concept1-looking`, `concept2-vacation` (5 beats, 19.5s),
+      `concept3-highlight`, `concept4-plans`. Verified 14.3s / 19.5s, all with
+      audio, -14.2 to -14.9 LUFS. Cost 0 credits — assembled from clips already
+      generated, to test the shape first.
+- [x] `make-endcard.py --line` draws a campaign line above the wordmark
+      ("|" breaks a row). Rendered and visually checked: no collision with the
+      wordmark, rule or boutique list.
+- [x] **The real constraint found: the photo library is the ceiling.** 20 photos,
+      one shoot, one model = **13 wardrobe x location looks, 3 of which are a ring
+      on a finger** — so ~10 usable scenes. Every advert redraws the same ten.
+      More credits cannot fix this. A 21-clip / 157.5-credit batch was submitted
+      no further than the upload stage and **cancelled before any spend** once
+      this was clear.
+- [x] Three client phone photos found in Downloads (showcase with the real OPAL
+      GEMS sign 1024x768, diamond hoop earrings and two tennis bracelets both
+      768x1024). New products, absent from the 20. Too small for hero video,
+      fine as `image_references`.
+- [x] **Four candidate synthetic models generated** (29 Oct, 1 credit, 4 x 0.25
+      `gpt_image_2_5`). Deliberately four different women, none a lookalike of
+      the real shoot model, all framed bare-necked and bare-eared so real pieces
+      composite cleanly. In `marketing/out/models/`.
+- [ ] **Andrew picks a model (1-4).** Then: create a reference Element from that
+      portrait (`manage_reference_elements` action=create), after which
+      `<<<element_id>>>` in any prompt reproduces the same woman. Scene stills
+      cost 0.25 and clips 7.5, so wardrobe and location stop being limited by
+      the shoot. This is what makes "restaurant with a view" and "opera box"
+      deliverable.
+- [ ] **Unverified: whether a real piece survives a restage.** The whole approach
+      rests on `gpt_image_2_5` holding the actual jewellery when the photo is
+      passed as `image_references`. Planned 1-credit / 4-image test, not yet run.
+      Do not scale up before it passes.
+- [ ] Synthetic models in a client's advertising: worth one line to the client,
+      since some platforms require synthetic-media disclosure on ads. Not a
+      blocker, their call.
 - [ ] Decide on native clip audio: Kling `sound:"on"` costs 10 credits vs 7.5
       and yields ambient foley, not music (tested: mean -33.8 dB, max -11.3 dB).
       Currently OFF in the task.
