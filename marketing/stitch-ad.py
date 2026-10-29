@@ -31,7 +31,10 @@ def main() -> None:
     ap.add_argument("--xfade", type=float, default=0.3)
     ap.add_argument("--music", default=None,
                     help="audio bed (mp3/wav). Trimmed to length, faded in and out.")
-    ap.add_argument("--music-db", type=float, default=-6.0,
+    # 0 dB, not a ducked -6: the music is the only audio in the advert, so there
+    # is nothing for it to sit under. make-music.py already lands it at
+    # -1.5 dBFS peak / -11.4 LUFS.
+    ap.add_argument("--music-db", type=float, default=0.0,
                     help="gain applied to the bed, in dB")
     args = ap.parse_args()
 
