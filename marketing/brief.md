@@ -75,6 +75,19 @@ and look wrong; the product-only shots are both safer and more on-brand.
   below her, the tiers recede." Or pick a setting with simpler geometry - a
   staircase landing needs none of this.
 - No prices, no claims about carat or value, no invented boutique names.
+- **Style the woman for the setting, not just the setting.** Wardrobe, hair and
+  makeup all have to move with the location or every scene reads as the same
+  photo with a new backdrop. An opera box wants an evening gown, an upswept or
+  swept-aside style and a defined evening eye; a yacht deck wants linen, loose
+  salt-dried hair and bare skin; a boutique wants daywear and a clean face.
+  Leaving these unstated inherits the reference portrait's styling, which is a
+  bare face and loose waves — fine for a daytime shot, wrong at the opera.
+  Name the hair explicitly in every prompt; it is the fastest read of "different
+  occasion" and it is the first thing to default.
+- **Bare necklines earn their place.** Strapless or a low straight neckline shows
+  a necklace against skin; a scoop tank crowds it and hair falling forward hides
+  it. If the hero piece is a necklace, keep one shoulder line clear and the hair
+  off that side.
 
 ## Cost
 

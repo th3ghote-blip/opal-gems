@@ -181,6 +181,19 @@
       foreground rail without stating camera position, how much of the rail was
       in frame, or the background's height relative to her. Three re-takes with
       those stated all read correctly. Rule added to `brief.md`.
+- [x] **Opera scene restyled** (29 Oct, 0.75 credits). Three further faults, all
+      Andrew's catches: her back was to the auditorium so neither she nor the
+      house read; no evening makeup; a plain scoop tank instead of eveningwear.
+      Cause: the prompts named only the location, so wardrobe, hair and makeup
+      inherited the reference portrait's bare face and loose waves. Fixed by
+      turning her three-quarters to the house with her face back over her
+      shoulder, and naming gown, hair and makeup per shot. Two `brief.md` rules
+      added: style for the setting (hair named in every prompt, it defaults
+      fastest), and keep a neckline and shoulder clear for a necklace.
+- [ ] **Restyle the other three scenes.** `restaurant`, `yacht` and `boutique`
+      still carry the default bare face and loose waves from the portrait, the
+      same fault just fixed on the opera. ~0.75 credits to redo all three with
+      per-setting wardrobe, hair and makeup.
 - [ ] **UNEXPLAINED SPEND — needs Andrew.** Balance went 4,483.03 -> 3,786.53
       today (696.50). Only 114.5 of that is this session's
       (15 x 7.5 Kling + 8 x 0.25 GPT Image 2.5, all preflighted). The rest is
