@@ -69,10 +69,15 @@ references for the piece.
 
    | Model / mode | Credits per 5s | Native resolution |
    |---|---|---|
-   | `kling3_0` std | 7.5 | 784x1176 (confirmed) |
-   | `kling3_0` pro | 8.75 | unmeasured |
+   | `kling3_0` std | 7.5 | 784x1176 (measured) |
+   | **`kling3_0` pro** | **8.75** | **1076x1924 (measured) - USE THIS** |
    | `kling3_0` 4k | unpriced | unmeasured |
    | `kling4_0` 1080p | 16.25 | 1080p per the catalogue, unmeasured |
+
+   **Settled 29 Oct: always use `mode: "pro"`.** For 1.25 extra credits a clip it
+   returns 1076x1924 instead of 784x1176 - a 38% linear gain and no upscaling in
+   the stitch. `kling4_0` at 16.25 is not worth 2.2x for the same resolution; its
+   only remaining draw is `image_references` and 30s clips.
 
    `kling4_0` also accepts up to seven `image_references`, so the model and the
    real pieces could be carried into the motion itself rather than only through a
@@ -168,11 +173,12 @@ references for the piece.
 
 ## Cost
 
-**23.25 credits a run**, confirmed against the credit ledger:
+**27.00 credits a run** on `mode: "pro"` (it was 23.25 on std; the ledger
+confirmed the std figure, and pro adds 1.25 per clip):
 
 | Item | Model | Each | Qty | Credits |
 |---|---|---|---|---|
-| scene clips, 5s 9:16 std | `kling3_0` | 7.5 | 3 | 22.50 |
+| scene clips, 5s 9:16 **pro** | `kling3_0` | 8.75 | 3 | 26.25 |
 | end-card backdrop | `gpt_image_2_5` | 0.25 | 1 | 0.25 |
 | still adverts | `gpt_image_2_5` | 0.25 | 2 | 0.50 |
 

@@ -236,16 +236,22 @@
       reveal -> hand to collarbone -> macro stone -> card, `out/opal-evening.mp4`.
       Verified 17.1s, 1080x1920, video + audio, -14 LUFS, styling continuous
       across all four beats. Campaign line "Some evenings ask for diamonds."
-- [ ] **Resolve the Kling model/resolution question — affects every advert.**
-      Measured: `kling3_0` `mode: std` returns **784x1176**, and `stitch-ad.py`
-      upscales ~1.38x to reach 1080x1920. That is the source of any softness.
-      Priced 29 Oct: std 7.5, **pro 8.75**, **kling4_0 1080p 16.25** per 5s.
-      `kling4_0` additionally takes up to seven `image_references` (pieces carried
-      into the motion, not just the start frame) and runs to 30s.
-      Next step: one `pro` clip and one `kling4_0` clip from the same start frame,
-      ~25 credits, then compare resolution and quality before committing.
-      If `pro` returns native 1080p, that is +1.25/clip (+5/advert) for a 38%
-      resolution gain — the cheapest possible win. Needs Andrew's go.
+- [x] **Kling resolution question SETTLED — always use `mode: "pro"`.**
+      Measured on the clips themselves: std returns **784x1176**, pro returns
+      **1076x1924**. For 1.25 extra credits a clip that removes the ~1.38x
+      upscale `stitch-ad.py` was doing, a 38% linear gain. `kling4_0` at 16.25 is
+      not worth 2.2x for the same resolution; its only remaining draw is
+      `image_references` and 30s clips. Recorded in `brief.md`.
+      **The weekly task still says `mode: std`** — STEP 4 of
+      `opal-gems-weekly-ads` needs changing to `pro`, and the run cost goes
+      22.5 -> 26.25 for three clips.
+- [x] **Two adverts built with everything applied** (29 Oct, 61.25 credits,
+      7 clips at pro). `out/opal-theone.mp4` — cabinet, clasp, cut to the opera
+      staircase, necklace macro, 17.1s. `out/opal-theset.mp4` — throat and
+      earring, earring macro, the lit case, 14.3s. Both verified 1080x1920 with
+      audio at -14.2 / -14.4 LUFS, daywear locked across the opening beats and
+      the cut to evening as the deliberate jump, correct earring scale, and the
+      product frames cropped so the pieces dominate.
 - [x] **Rings verified** (29 Oct, 1 credit). Both the emerald-cut and the round
       brilliant came back accurate — correct step cut, four claws, pavé band —
       and hand anatomy was clean in all four images, which was the real risk.
