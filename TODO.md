@@ -201,6 +201,18 @@
       moment. Daywear with hair down, so the cut to evening reads as the story
       rather than a continuity error (the one justified styling change inside an
       advert).
+- [x] **Earring scale corrected** (29 Oct, 0.5 credits). Andrew compared the
+      generation against his own card photo: the hoop came out roughly three
+      times life size, hanging past the jaw with chunky stones. Two causes, both
+      mine — the prompt said the piece "fills the centre of the frame and is the
+      largest thing in it", which the model read as an instruction to enlarge the
+      object rather than move the camera; and no dimensions were given at all, so
+      it invented them. Fixed by stating ~30 mm, ~20 stones at no more than
+      2.5 mm, an anatomical check (lowest point just below the lobe, well above
+      the jawline, narrower than the lobe is wide), and achieving the tight frame
+      by camera distance. Three `brief.md` rules added.
+      **Re-check every other piece's scale the same way before any of this ships**
+      — the necklace and rings were never size-checked against the originals.
 - [x] **Product-led frames** (29 Oct, 1 credit). Andrew: the jewellery "is not
       the main focus here, it's more about the woman". Correct — every frame was
       a half-figure portrait, where the eyes take the frame. Fixed by cropping

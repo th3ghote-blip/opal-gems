@@ -133,9 +133,22 @@ references for the piece.
 - **Crop the face to make the jewellery the subject.** A half-figure portrait is
   a picture of a woman who happens to be wearing jewellery; the eyes take the
   frame. For a product-led shot, run the frame from the lower lip down, or go in
-  on the ear, throat or hand alone, and say in the prompt that the piece "fills
-  the centre of the frame and is the largest thing in it". A jewellery advert
-  should be mostly tight frames with one wide for aspiration, not the reverse.
+  on the ear, throat or hand alone. A jewellery advert should be mostly tight
+  frames with one wide for aspiration, not the reverse.
+- **Fill the frame with the CAMERA, never by enlarging the piece.** Saying a
+  piece "fills the centre of the frame and is the largest thing in it" is read as
+  an instruction to inflate the object: it produced a hoop earring roughly three
+  times life size, hanging past the jaw with chunky stones. Say instead that the
+  camera is very close, or shoot at macro distance, and add that the frame is
+  filled "because the camera is close, not because the piece is large".
+- **State the real dimensions of every piece, in millimetres, plus an anatomical
+  check.** A reference photo of a piece on a card carries no scale the model can
+  use. Give the length and the stone size, then anchor it to the body: the hoops
+  are "about 30 mm long, roughly twenty stones each no more than 2.5 mm across,
+  hanging from the earlobe with the lowest point only a little below the lobe and
+  well above the jawline, the hoop narrower than the earlobe is wide". Measure
+  off the client's own photo before writing the prompt - the hoops read as about
+  two finger-widths on the card.
 - **Earrings need the hair up.** An earring behind loose hair is invisible. Say
   the hair is lifted clear of the ear and neck, and turn the head a little to one
   side so one ear is square to the camera.
