@@ -123,6 +123,29 @@
 - [x] Corrected the run cost in `brief.md`: said "8 credits a run" (written for
       the old single-clip advert), actually **23.25** — 3 x 7.5 Kling clips +
       3 x 0.25 GPT Image. Confirmed against the credit ledger. Music is free.
+- [x] **Five more adverts built (29 Oct)** from the 15 previously unused photos —
+      15 fresh `kling3_0` clips, 112.5 credits (7.5 each, preflighted with
+      `get_cost`). Verified: all five are 14.1s, carry video AND audio, and
+      measure -14.1 to -14.9 LUFS. Each uses a different 14s phrase of the same
+      track so they read as a series. Logged in `marketing/log.md`.
+      2 of 15 were hijacked by a preset called "IN THE DARK" on first submission
+      (both dark marble-bar shots) and succeeded on resubmission with
+      `declined_preset_id` — the task's STEP 4 rule is doing real work.
+- [ ] **All 20 photos are now used.** The next weekly run must reuse rather than
+      pick an unused photo. STEP 2 of the `opal-gems-weekly-ads` task still says
+      "not used in the last three runs" — still satisfiable, but worth a reread
+      once the log has a few more rows.
+- [ ] **Five staff phone videos reviewed (29 Oct), not usable as hero footage.**
+      464x832 / 576x1024 (19-28% of 1080x1920's pixels), flat overhead LED, and
+      **price tags visible in three of them** — which breaks the brief's no-prices
+      rule outright. The showcase pan with the real OPAL GEMS sign is worth
+      salvaging as an establishing or closing shot (stabilise, crop out the tags,
+      regrade warm). Awaiting Andrew's call on whether to do that.
+- [ ] **Four narrative concepts received from the client (29 Oct)** — "I'm just
+      looking", "Your vacation called", "POV weekend getaway", "The jewelry has
+      plans". Assessment given in chat: the copy is good, the "AI generates the
+      story" framing is not deliverable because the pieces will not stay accurate
+      across invented scenes. Awaiting Andrew's direction.
 - [ ] Decide on native clip audio: Kling `sound:"on"` costs 10 credits vs 7.5
       and yields ambient foley, not music (tested: mean -33.8 dB, max -11.3 dB).
       Currently OFF in the task.
