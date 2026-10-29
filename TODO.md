@@ -194,6 +194,21 @@
       still carry the default bare face and loose waves from the portrait, the
       same fault just fixed on the opera. ~0.75 credits to redo all three with
       per-setting wardrobe, hair and makeup.
+- [x] **Rings verified** (29 Oct, 1 credit). Both the emerald-cut and the round
+      brilliant came back accurate — correct step cut, four claws, pavé band —
+      and hand anatomy was clean in all four images, which was the real risk.
+      What made it work, now in `brief.md`: state "the five fingers relaxed and
+      slightly apart" and name which finger carries the ring.
+      Also proved: **three reference images hold at once** (model + necklace +
+      ring all preserved in one generation).
+      Caveat: at half-figure a ring is only a few pixels and reads as "wearing a
+      ring" — the product detail has to come from a macro beat. Necklaces carry
+      at half-figure, rings do not.
+- [x] **Within-advert consistency proved.** Three beats generated with the
+      wardrobe, hair and makeup wording repeated verbatim came back continuous.
+      `brief.md` rule corrected: vary styling ACROSS adverts, lock it WITHIN one.
+      The earlier "style per setting" rule was half-wrong on its own and would
+      have jump-cut a multi-scene advert.
 - [ ] **UNEXPLAINED SPEND — needs Andrew.** Balance went 4,483.03 -> 3,786.53
       today (696.50). Only 114.5 of that is this session's
       (15 x 7.5 Kling + 8 x 0.25 GPT Image 2.5, all preflighted). The rest is

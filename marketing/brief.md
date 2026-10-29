@@ -88,6 +88,19 @@ and look wrong; the product-only shots are both safer and more on-brand.
   a necklace against skin; a scoop tank crowds it and hair falling forward hides
   it. If the hero piece is a necklace, keep one shoulder line clear and the hair
   off that side.
+- **Vary styling ACROSS adverts, lock it WITHIN one.** Three scenes cut together
+  are one occasion: repeat the wardrobe, hair and makeup wording word for word in
+  every beat of the same advert, or it jump-cuts. The only justified change
+  inside one advert is a deliberate time jump - daytime boutique to evening out -
+  and then it should look intentional in both beats, not drift.
+- **Hands: state the count.** "the five fingers relaxed and slightly apart" and
+  naming which finger carries the ring produced clean anatomy four times out of
+  four. Left unstated, hands are where this model fails worst.
+- **A ring needs its own macro beat.** In a half-figure shot a ring is a few
+  pixels and reads only as "she is wearing a ring"; the detail has to come from a
+  close-up of the hand. Necklaces carry at half-figure, rings do not.
+- Up to three reference images hold at once - the model, a necklace and a ring
+  were all preserved in one generation.
 
 ## Cost
 
