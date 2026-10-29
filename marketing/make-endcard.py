@@ -50,7 +50,7 @@ def cover(img: Image.Image, w: int, h: int) -> Image.Image:
     return img.crop((left, top, left + w, top + h))
 
 
-def build(plate_path: Path | None, out_path: Path) -> None:
+def build(plate_path: Path | None, out_path: Path, line: str | None = None) -> None:
     if plate_path and plate_path.exists():
         base = cover(Image.open(plate_path).convert("RGB"), W, H)
     else:
@@ -74,7 +74,17 @@ def build(plate_path: Path | None, out_path: Path) -> None:
     f_sub = font(SERIF, 34)
     f_small = font(SERIF, 27)
 
-    mark_y = cy - 150
+    # With a campaign line the whole block drops, so the line sits above the
+    # wordmark and the wordmark still reads as the signature rather than a
+    # caption. Split the line on "|" to control where it breaks.
+    mark_y = cy - 150 if not line else cy - 86
+    if line:
+        f_line = font(SERIF, 42)
+        rows = [r.strip() for r in line.split("|") if r.strip()]
+        top = mark_y - 64 - 56 * len(rows)
+        for i, row in enumerate(rows):
+            draw_tracked(d, cx, top + 56 * i, row, f_line, CREAM, 2)
+
     draw_tracked(d, cx, mark_y, "OPAL GEMS", f_mark, GOLD, 22)
 
     rule_y = mark_y + 168
@@ -95,6 +105,10 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--plate", default=None, help="generated backdrop image")
     ap.add_argument("--out", default="out/endcard.png")
+    ap.add_argument("--line", default=None,
+                    help='campaign line above the wordmark; "|" breaks a row. '
+                         'Never put this in a generation prompt - generated '
+                         'lettering comes out garbled, which is why it is drawn here.')
     args = ap.parse_args()
     here = Path(__file__).resolve().parent
     plate = Path(args.plate) if args.plate else None
@@ -103,7 +117,7 @@ def main() -> None:
     out = Path(args.out)
     if not out.is_absolute():
         out = here / out
-    build(plate, out)
+    build(plate, out, args.line)
 
 
 if __name__ == "__main__":
