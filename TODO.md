@@ -245,6 +245,38 @@
       **The weekly task still says `mode: std`** — STEP 4 of
       `opal-gems-weekly-ads` needs changing to `pro`, and the run cost goes
       22.5 -> 26.25 for three clips.
+- [x] **Earrings added to advert A** (29 Oct, 27 credits: 3 stills + 3 pro clips).
+      Andrew: "in the first one she only has a necklace for some reason". Cause:
+      those three beats were generated before the earrings photo had been
+      uploaded, so only the necklace reference was ever passed. At the opera in a
+      strapless gown with her hair up, bare ears is plainly wrong.
+      Rule for the future: **when a new piece reference is added, re-check every
+      existing beat for what it is now missing** — the beats do not update
+      themselves.
+      Known remaining gap: the ring is absent from the staircase beat (the ring
+      reference was not passed, and four references risked diluting). At that
+      distance a ring reads as nothing anyway; it carries in its own macro.
+- [x] **New theme, new model, real inventory pieces** (29 Oct, 1 credit).
+      Four genuine in-stock SKUs instead of the shoot photos — necklace 429198,
+      earrings 114291, bracelet 114362, ring 114657, all yellow gold so the set
+      matches. Model 3 (cropped hair keeps the ears clear). Sunlit Mediterranean
+      rooftop at golden hour. Full-figure shot plus three close-ups, per Andrew's
+      note that the close-up advert needed a full shot too.
+      **Five references held at once** — model + four pieces, all preserved. My
+      earlier "four references risked diluting" was wrong, and that guess is what
+      dropped the ring from advert A and cost a re-shoot.
+- [x] Found the real source of pieces: `piece_photos` holds **89 studio shots**
+      (35 earrings, 19 necklaces, 18 rings, 13 bracelets, 2 loose, 2 pendants)
+      and the `piece-photos` bucket is publicly readable, so `media_import_url`
+      fetches them with no upload step. Recorded in `brief.md` with the query.
+      Note: theopalgems.com lists a **Watches** category the shoot never covered.
+      Note: that bucket serving unauthenticated reads is intentional-looking for
+      product imagery, but worth a glance if anything non-public ever lands there.
+- [ ] **Kling 4.0 A/B test running** (29 Oct, 16.25 credits). Same start frame as
+      the `pro` earring macro plus the earrings photo as an `image_reference`, to
+      test the one thing `pro` cannot do — carrying a real piece through the
+      motion rather than only in the start frame. Compare resolution and piece
+      stability against `out/pb2.mp4` before deciding anything.
 - [x] **Two adverts built with everything applied** (29 Oct, 61.25 credits,
       7 clips at pro). `out/opal-theone.mp4` — cabinet, clasp, cut to the opera
       staircase, necklace macro, 17.1s. `out/opal-theset.mp4` — throat and

@@ -132,6 +132,20 @@ references for the piece.
 - **Hands: state the count.** "the five fingers relaxed and slightly apart" and
   naming which finger carries the ring produced clean anatomy four times out of
   four. Left unstated, hands are where this model fails worst.
+- **Never leave arms hanging straight in a full-figure shot.** With the arms
+  loose at her sides the model has no elbow landmark and stretches the limb into
+  a tube: measured 3.4 head-lengths shoulder to fingertip against a normal
+  3.0-3.2. State the pose instead - "both elbows bent, hands clasped lightly
+  together in front at waist height, the forearms angling inward and the elbows
+  clearly visible" - and add "natural human proportions with the fingertips
+  reaching mid-thigh". Re-shooting with that pose fixed it in one pass.
+- **Small earrings are unreliable at full-figure distance.** Two full-figure
+  frames from the same references: one rendered a correct pair, the other
+  scattered three and then five floating earring copies in the air beside her
+  head with only studs on the actual ears. Saying "one on each ear, a matching
+  pair and only two in total" did NOT prevent it. Treat a full-figure frame as
+  unable to carry earrings - let the half-figure and macro beats carry them, and
+  check every full-figure frame for floating copies before it ships.
 - **A ring needs its own macro beat.** In a half-figure shot a ring is a few
   pixels and reads only as "she is wearing a ring"; the detail has to come from a
   close-up of the hand. Necklaces carry at half-figure, rings do not.
@@ -168,8 +182,39 @@ references for the piece.
   `nsfw` on an otherwise clean prompt. Raise the crop to the collarbone and have
   her hold her own hair clear, and it passes. Never re-run the identical prompt
   after a flag - change one variable so the result means something.
-- Up to three reference images hold at once - the model, a necklace and a ring
-  were all preserved in one generation.
+- **FIVE reference images hold at once** - the model plus a necklace, earrings, a
+  bracelet and a ring were all preserved in a single generation (29 Oct). Do not
+  drop a piece for fear of diluting the references; that assumption was wrong and
+  cost a re-shoot.
+- **HARD RULE: every figure shot shows the full set.** Necklace, earrings,
+  bracelet and ring, all of them, in every frame where the body is visible.
+  Shipping a beat with one piece missing is a failed frame. When a new piece
+  reference is added, re-check every existing beat for what it is now missing -
+  the beats do not update themselves.
+- **Every advert needs a full-figure shot as well as the macros.** The close-ups
+  carry the product; the full shot carries the aspiration and shows how a piece
+  sits on a dressed person. One of each, minimum.
+
+## Source: the live inventory
+
+The richest source of real pieces is the inventory database itself, not the
+20-photo shoot. `piece_photos` holds **89 studio shots** - 35 earrings,
+19 necklaces, 18 rings, 13 bracelets, 2 loose stones, 2 pendants - all clean
+product photography on black or white.
+
+The `piece-photos` storage bucket is publicly readable, so Higgsfield can fetch
+them directly with `media_import_url` - no upload or PUT needed:
+
+    https://<project>.supabase.co/storage/v1/object/public/piece-photos/<storage_path>
+
+Query for in-stock pieces and join `pieces` for the SKU and type:
+
+    piece_photos?select=storage_path,pieces(sku,type,status)
+
+Match the metals before building a set - the inventory mixes yellow and white
+gold, and a mixed-metal set looks like a mistake rather than a choice.
+theopalgems.com itself only has category images, no individual products, and
+also lists a **Watches** category that the shoot never covered.
 
 ## Cost
 
