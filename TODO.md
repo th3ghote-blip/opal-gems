@@ -272,7 +272,25 @@
       Note: theopalgems.com lists a **Watches** category the shoot never covered.
       Note: that bucket serving unauthenticated reads is intentional-looking for
       product imagery, but worth a glance if anything non-public ever lands there.
-- [ ] **Kling 4.0 A/B test running** (29 Oct, 16.25 credits). Same start frame as
+- [x] **Two new adverts built** (29 Oct, 70.25 credits: 1 still + 8 pro clips).
+      `out/opal-rooftop.mp4` (model 3, golden-hour rooftop) and
+      `out/opal-candlelit.mp4` (model 1, candlelit dining room) — no opera in
+      either. Four real in-stock SKUs on her in every frame; three-quarter ->
+      half -> throat/ear macro -> hand macro -> card. Both verified 17.1s,
+      1080x1920, with audio at -14.2 / -14.6 LUFS.
+      The rooftop opener is a three-quarter (knee-up) rather than head-to-foot:
+      both full-figure attempts had floating earrings, and the tighter frame
+      rendered one correctly attached earring per ear.
+- [x] **Kling 4.0 A/B SETTLED — stay on `pro`.** Same start frame, same prompt:
+      `kling3_0 pro` and `kling4_0 1080p` both returned **1076x1924, 24fps,
+      5.04s**. 4.0 costs 16.25 against 8.75 — 86% more for identical pixels, and
+      a smaller file (5.22 MB vs 8.76 MB), which points to heavier compression
+      rather than more detail. Its only remaining draw is `image_references`
+      carried into the motion and 30s clips. Recorded in `brief.md`.
+- [x] **Earring artefact cause isolated.** Not fixable by wording — saying "one
+      per ear, only two in total" failed twice. It is a FRAMING limit: at
+      head-to-foot distance the model scatters copies; at three-quarter and
+      closer it attaches them correctly. Rule in `brief.md`. Same start frame as
       the `pro` earring macro plus the earrings photo as an `image_reference`, to
       test the one thing `pro` cannot do — carrying a real piece through the
       motion rather than only in the start frame. Compare resolution and piece

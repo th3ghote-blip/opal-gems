@@ -72,7 +72,13 @@ references for the piece.
    | `kling3_0` std | 7.5 | 784x1176 (measured) |
    | **`kling3_0` pro** | **8.75** | **1076x1924 (measured) - USE THIS** |
    | `kling3_0` 4k | unpriced | unmeasured |
-   | `kling4_0` 1080p | 16.25 | 1080p per the catalogue, unmeasured |
+   | `kling4_0` 1080p | 16.25 | **1076x1924 (measured) - same as pro** |
+
+   A/B on the same start frame and prompt: `pro` and `kling4_0` both returned
+   1076x1924 at 24fps over 5.04s. `kling4_0` cost 86% more for identical pixels
+   and a smaller file, which suggests heavier compression rather than more
+   detail. Its only remaining draw is `image_references` carried into the motion
+   and 30s clips.
 
    **Settled 29 Oct: always use `mode: "pro"`.** For 1.25 extra credits a clip it
    returns 1076x1924 instead of 784x1176 - a 38% linear gain and no upscaling in
