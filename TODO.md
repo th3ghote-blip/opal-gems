@@ -194,6 +194,32 @@
       still carry the default bare face and loose waves from the portrait, the
       same fault just fixed on the opera. ~0.75 credits to redo all three with
       per-setting wardrobe, hair and makeup.
+- [x] **Cabinet and try-on beats added** (29 Oct, 0.75 credits). The first
+      bespoke advert opened with her already at the opera, dropping the setup
+      Andrew actually asked for — cabinet, try-on, then cut. Three stills made:
+      at the lit case, an assistant fastening the clasp at her nape, and a mirror
+      moment. Daywear with hair down, so the cut to evening reads as the story
+      rather than a continuity error (the one justified styling change inside an
+      advert).
+- [x] **Product-led frames** (29 Oct, 1 credit). Andrew: the jewellery "is not
+      the main focus here, it's more about the woman". Correct — every frame was
+      a half-figure portrait, where the eyes take the frame. Fixed by cropping
+      the face out: frame from the lower lip down, or the ear, throat or hand
+      alone. Four made, including the **hoop earrings** from the client's phone
+      photo. Three `brief.md` rules added: crop the face to make the piece the
+      subject; a jewellery advert is mostly tight frames with one wide, not the
+      reverse; earrings need the hair lifted clear or they are invisible.
+- [x] Three client phone photos added to `photos/` as 21 (hoop earrings),
+      22 (two tennis bracelets) and 23 (showcase with the OPAL GEMS sign).
+      21 and 22 are products absent from the 20-photo shoot. All three carry
+      visible price tags — recorded in `brief.md` as reference-only, never to be
+      reproduced as-shot.
+- [ ] **Rebuild the advert with the full arc.** Beats now exist for
+      cabinet -> try-on -> cut -> evening -> product macros, but the cut version
+      still on disk (`out/opal-evening.mp4`) is the old four-beat one that starts
+      at the opera. Needs ~2 new clips for the opening beats (~15 credits) plus a
+      re-stitch, and should lean on the tight product frames rather than the
+      portraits.
 - [x] **First fully bespoke advert built** (29 Oct, 30.5 credits): hook ->
       reveal -> hand to collarbone -> macro stone -> card, `out/opal-evening.mp4`.
       Verified 17.1s, 1080x1920, video + audio, -14 LUFS, styling continuous

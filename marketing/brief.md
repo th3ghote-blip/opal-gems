@@ -44,6 +44,19 @@ and look wrong; the product-only shots are both safer and more on-brand.
 | 15 | model with aperol spritz, hedge | yes |
 | 19, 20 | model in teal dress, boutique interior | yes |
 
+Three further client phone photos were added on 29 Oct. They are 768x1024 and
+1024x768 — too small to be hero video, but good as `image_references`:
+
+| Shot | Contents |
+|---|---|
+| 21 | diamond hoop earrings, elongated oval pave hoops, on a white card |
+| 22 | two diamond tennis bracelets, one white gold one yellow, on a black pillow |
+| 23 | the real showcase with the OPAL GEMS sign — the only asset carrying it |
+
+**21 and 22 are products that appear nowhere in the 20-photo shoot.** 21, 22 and
+23 all have price tags visible, so never reproduce them as-shot; use them only as
+references for the piece.
+
 ## Weekly output
 
 1. **One vertical video** — 9:16, 5s, silent, for Reels/TikTok/Stories.
@@ -117,6 +130,15 @@ and look wrong; the product-only shots are both safer and more on-brand.
 - **A ring needs its own macro beat.** In a half-figure shot a ring is a few
   pixels and reads only as "she is wearing a ring"; the detail has to come from a
   close-up of the hand. Necklaces carry at half-figure, rings do not.
+- **Crop the face to make the jewellery the subject.** A half-figure portrait is
+  a picture of a woman who happens to be wearing jewellery; the eyes take the
+  frame. For a product-led shot, run the frame from the lower lip down, or go in
+  on the ear, throat or hand alone, and say in the prompt that the piece "fills
+  the centre of the frame and is the largest thing in it". A jewellery advert
+  should be mostly tight frames with one wide for aspiration, not the reverse.
+- **Earrings need the hair up.** An earring behind loose hair is invisible. Say
+  the hair is lifted clear of the ear and neck, and turn the head a little to one
+  side so one ear is square to the camera.
 - Up to three reference images hold at once - the model, a necklace and a ring
   were all preserved in one generation.
 
