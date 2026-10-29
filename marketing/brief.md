@@ -145,13 +145,26 @@ references for the piece.
   together in front at waist height, the forearms angling inward and the elbows
   clearly visible" - and add "natural human proportions with the fingertips
   reaching mid-thigh". Re-shooting with that pose fixed it in one pass.
-- **Small earrings are unreliable at full-figure distance.** Two full-figure
-  frames from the same references: one rendered a correct pair, the other
-  scattered three and then five floating earring copies in the air beside her
-  head with only studs on the actual ears. Saying "one on each ear, a matching
-  pair and only two in total" did NOT prevent it. Treat a full-figure frame as
-  unable to carry earrings - let the half-figure and macro beats carry them, and
-  check every full-figure frame for floating copies before it ships.
+- **Earrings detach unless the form makes the attachment obvious.** The cause is
+  not distance - a half-figure frame detached one too - it is the shape of the
+  piece. A long thin ear climber (a pear above a pave bar, shot on an invisible
+  acrylic stand) gave floating copies beside the head at every framing, and
+  saying "one on each ear, a matching pair and only two in total" did not prevent
+  it. A **closed hoop** attached correctly first time, every time: the model can
+  see where the band passes through the lobe. Prefer hoops and studs for anything
+  worn in frame, say "passing through each earlobe, the metal band clearly
+  visible where it enters the lobe", and keep awkward forms for product-only
+  shots. Check every frame at 3x magnification before it ships - a detached
+  earring is invisible at display size. I shipped one calling it "clean".
+- **In a dim scene, say the stones only REFLECT.** A candlelit room has no light
+  bright enough for diamonds to blaze, so asking for light to "rake across" or
+  "flare on" the stones makes the model resolve the contradiction by turning them
+  into light sources: flat white emitters brighter than the candle flames, with
+  no metal visible. State it explicitly - "the diamonds are lit only by the room:
+  they reflect the candle flames as small warm pinpoint highlights against darker
+  facets, and are dimmer than the flames themselves, with the metal reading as
+  metal". Sanity check: in the finished frame the practical lights must be
+  brighter than the jewellery.
 - **A ring needs its own macro beat.** In a half-figure shot a ring is a few
   pixels and reads only as "she is wearing a ring"; the detail has to come from a
   close-up of the hand. Necklaces carry at half-figure, rings do not.

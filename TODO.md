@@ -287,10 +287,29 @@
       a smaller file (5.22 MB vs 8.76 MB), which points to heavier compression
       rather than more detail. Its only remaining draw is `image_references`
       carried into the motion and 30s clips. Recorded in `brief.md`.
-- [x] **Earring artefact cause isolated.** Not fixable by wording — saying "one
-      per ear, only two in total" failed twice. It is a FRAMING limit: at
-      head-to-foot distance the model scatters copies; at three-quarter and
-      closer it attaches them correctly. Rule in `brief.md`. Same start frame as
+- [x] **Earring artefact cause properly isolated — my first diagnosis was wrong.**
+      I said it was a framing limit; a half-figure frame then detached one too.
+      The real cause is the **form of the piece**: the ear climber (pear above a
+      pave bar, shot on an invisible acrylic stand) detaches at every framing,
+      while a **closed hoop (SKU 114169) attached correctly first time** — the
+      model can see where the band passes through the lobe.
+- [x] **Glowing earrings fixed** (29 Oct, 0.25 credits). Andrew spotted the stones
+      reading as flat white emitters brighter than the candle flames. Cause: a
+      candlelit scene has no light bright enough for diamonds to blaze, and my
+      prompt asked for light to "rake across the stones", so the model made them
+      the source. Fixed by stating they are lit only by the room, reflect the
+      flames as pinpoint highlights, and are dimmer than the flames. Verified at
+      3x: flames now brighter than the stones, metal reads as gold.
+- [ ] **I shipped a frame I had called "clean".** `dine-half` has a detached left
+      earring, visible only at magnification; I checked it at display size and
+      said it was artefact-free. **Every frame gets a 3x check before it ships**
+      — now a rule in `brief.md`. Re-check the delivered adverts
+      (`opal-rooftop`, `opal-candlelit`, `opal-theone`, `opal-theset`) the same
+      way before any of them goes to the client.
+- [ ] **Rebuild the candlelit advert with the hoop.** `out/opal-candlelit.mp4`
+      still contains the detached and glowing climber. Needs the half and
+      throat beats re-stilled with SKU 114169 plus the reflect-not-emit wording,
+      then re-animated and re-stitched: ~2 stills + 2 pro clips, ~18 credits. Same start frame as
       the `pro` earring macro plus the earrings photo as an `image_reference`, to
       test the one thing `pro` cannot do — carrying a real piece through the
       motion rather than only in the start frame. Compare resolution and piece
