@@ -306,6 +306,24 @@
       — now a rule in `brief.md`. Re-check the delivered adverts
       (`opal-rooftop`, `opal-candlelit`, `opal-theone`, `opal-theset`) the same
       way before any of them goes to the client.
+- [ ] **Publish the adverts to TikTok + YouTube** (30 Oct, Andrew's request).
+      Captions drafted in `marketing/social-captions.md` — AI-advertising /
+      consulting angle, short TikTok line plus longer YouTube version for each.
+      **TikTok:** no account was connected; `tiktok_connect` issued an auth URL
+      (connector `956c180b-70c6-44c4-8621-3a24495776b8`, expires 03:22 Spain
+      time 30 Oct) for th3ghote@gmail.com. The tool will NOT let Claude post —
+      it hands Andrew a publish form to submit per video. `opal-walkout.mp4`
+      uploaded to Higgsfield (media `96152891-2466-43b3-a4b6-d591fd5e1ea6`),
+      required because TikTok only accepts their verified domain; the other four
+      still need uploading.
+      **YouTube:** no API connector exists in this session. Only route is driving
+      Chrome signed into nifieldandrew@gmail.com, manually per video. Not started
+      — needs Andrew's go.
+      Recommended 5 of the 16, not all: walkout, candlelit, rooftop, theset,
+      theone. The `opal-ad-*` batch is upscaled from 784px, `opal-evening` has no
+      earrings or ring, and `opal-theone` is missing the ring in the staircase
+      beat — posting the weak ones alongside the good ones undercuts the pitch.
+      Both platforms need the AI-generated-content declaration set.
 - [x] **`opal-candlelit.mp4` rebuilt** (29 Oct, 9 credits: 1 still + 1 pro clip).
       Andrew asked repeatedly for THIS video fixed; I built a different one
       (`opal-walkout`) and called it a supersession instead of doing what was
