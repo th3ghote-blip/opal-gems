@@ -19,6 +19,24 @@ const SERVER_VERSION = "1.0.0";
 const HIDDEN_SHOP = "friends & family";
 const MAX_LIMIT = 50;
 
+// Type must match exactly. A substring match is actively wrong here:
+// "%Ring%" also matches "Earrings", which returned 60 rows for a ring search.
+const PIECE_TYPES = ["Bracelet", "Earrings", "Loose", "Necklace", "Pendant", "Ring"] as const;
+
+// Accepts the canonical value, any casing, and the obvious singular/plural slip
+// ("rings" -> Ring, "earring" -> Earrings). Returns null if it is not a real type.
+function normaliseType(input: string): string | null {
+  const s = input.trim().toLowerCase();
+  if (!s) return null;
+  for (const t of PIECE_TYPES) {
+    const tl = t.toLowerCase();
+    if (tl === s || tl === s.replace(/s$/, "") || tl.replace(/s$/, "") === s || `${tl}s` === s) {
+      return t;
+    }
+  }
+  return null;
+}
+
 // Columns safe to expose. Pricing and cost columns are deliberately absent.
 const PIECE_COLUMNS =
   "sku, type, metal, karat, main_stone, stone_cut, clarity, color_grade, " +
@@ -92,7 +110,11 @@ const TOOLS = [
     inputSchema: {
       type: "object",
       properties: {
-        type: { type: "string", description: "Piece type, e.g. Necklace, Earrings, Ring, Bracelet. Partial match." },
+        type: {
+          type: "string",
+          enum: [...PIECE_TYPES],
+          description: "Piece type. Must be one of the listed values; matched exactly, not as a substring.",
+        },
         metal: { type: "string", description: "e.g. Yellow Gold, White Gold. Partial match." },
         main_stone: { type: "string", description: "e.g. Diamond, Sapphire. Partial match." },
         shop: { type: "string", description: "Boutique name. Partial match." },
@@ -128,7 +150,11 @@ async function searchStock(args: Record<string, unknown>) {
     .eq("status", "in_stock")
     .gt("quantity", 0);
 
-  if (typeof args.type === "string" && args.type.trim()) q = q.ilike("type", `%${args.type.trim()}%`);
+  if (typeof args.type === "string" && args.type.trim()) {
+    const t = normaliseType(args.type);
+    if (!t) throw new Error(`Unknown type "${args.type}". Valid types: ${PIECE_TYPES.join(", ")}.`);
+    q = q.ilike("type", t); // no wildcards: exact, case-insensitive
+  }
   if (typeof args.metal === "string" && args.metal.trim()) q = q.ilike("metal", `%${args.metal.trim()}%`);
   if (typeof args.main_stone === "string" && args.main_stone.trim())
     q = q.ilike("main_stone", `%${args.main_stone.trim()}%`);
