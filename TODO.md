@@ -306,24 +306,55 @@
       — now a rule in `brief.md`. Re-check the delivered adverts
       (`opal-rooftop`, `opal-candlelit`, `opal-theone`, `opal-theset`) the same
       way before any of them goes to the client.
-- [ ] **Publish the adverts to TikTok + YouTube** (30 Oct, Andrew's request).
-      Captions drafted in `marketing/social-captions.md` — AI-advertising /
-      consulting angle, short TikTok line plus longer YouTube version for each.
-      **TikTok:** no account was connected; `tiktok_connect` issued an auth URL
-      (connector `956c180b-70c6-44c4-8621-3a24495776b8`, expires 03:22 Spain
-      time 30 Oct) for th3ghote@gmail.com. The tool will NOT let Claude post —
-      it hands Andrew a publish form to submit per video. `opal-walkout.mp4`
-      uploaded to Higgsfield (media `96152891-2466-43b3-a4b6-d591fd5e1ea6`),
-      required because TikTok only accepts their verified domain; the other four
-      still need uploading.
-      **YouTube:** no API connector exists in this session. Only route is driving
-      Chrome signed into nifieldandrew@gmail.com, manually per video. Not started
-      — needs Andrew's go.
-      Recommended 5 of the 16, not all: walkout, candlelit, rooftop, theset,
-      theone. The `opal-ad-*` batch is upscaled from 784px, `opal-evening` has no
-      earrings or ring, and `opal-theone` is missing the ring in the staircase
-      beat — posting the weak ones alongside the good ones undercuts the pitch.
-      Both platforms need the AI-generated-content declaration set.
+- [x] **TikTok: all 16 adverts scheduled** (30 Oct, one a day, Oct 30 - Nov 14).
+      Account th3ghote@gmail.com ("AI App Genius"), driven through Chrome rather
+      than the Higgsfield connector, at Andrew's direction. Every post carries
+      the **AI-generated content** label plus a caption from
+      `marketing/social-captions.md`. Verified in TikTok Studio's Posts list:
+      Oct 30, Oct 31 and Nov 1-6, Nov 8-14 confirmed by listing or search; Nov 7
+      ("Five adverts from one afternoon") confirmed by its submit and redirect,
+      not re-checked in the listing.
+      Measured: TikTok schedules ~30 days ahead (Nov 29 selectable), not 10; its
+      time picker scrolls ~10 wheel-ticks per hour, so posts kept their default
+      03:00-04:00 slots instead of an evening slot.
+- [ ] **YouTube: 5 of 16 scheduled** (30 Oct). Channel **AI App Genius
+      @HudzenTen** on nifieldandrew@gmail.com, in the SECOND Chrome
+      (deviceId c3ee1559-0d72-4486-9da2-84d20f97c1b3) - the first Chrome was
+      signed into a personal gaming channel, caught before anything was uploaded
+      there. All as Shorts, public, 00:00, with "Yes, AI was used" and
+      not-made-for-kids set: Oct 31 walkout, Nov 1 candlelit, Nov 2 rooftop,
+      Nov 3 theset, Nov 4 theone.
+      Remaining 11 (opal-evening, opal-ad, opal-ad-1..5, concept1-4) would run
+      Nov 5-15, ~7 browser steps each. Needs Andrew's word on whether the weaker
+      eleven are worth it.
+      Gotcha: Escape closes YouTube's upload dialog (the video survives as a
+      Draft with title and description intact); dismiss the hashtag suggestion
+      list by clicking the title field instead.
+- [x] **Read-only MCP stock server for Meta Muse** (1-2 Nov).
+      `src/app/api/mcp/route.ts` - JSON-RPC 2.0 over HTTP POST, hand-rolled (no
+      SDK dependency added). Tools: `search_stock`, `get_piece`, `list_shops`.
+      All three are reads; there is no write tool.
+      Withheld on purpose: cost, original_price, sale_price, internal_notes, and
+      the Friends & Family virtual shop. Scope is `in_stock` with quantity > 0.
+      Auth fails CLOSED - unset `MUSE_API_KEY` refuses every request (the older
+      `/api/public/stock` fails open if its key is unset; left alone, not mine to
+      change silently).
+      Verified against the live DB on the dev server: 401 with no key and with a
+      wrong key; initialize returns protocol 2025-06-18; tools/list returns the
+      three; list_shops returns 5 boutiques / 102 in-stock pieces; search_stock
+      type=Earrings returns 39; get_piece 5055947 found; bogus SKU returns
+      found:false; unknown tool returns -32602; 38 of 50 pieces carry working
+      public photo URLs; and grepping 50 returned pieces for
+      price|cost|internal_note|friends matched nothing.
+      `npm run build` passes. `MUSE_API_KEY` documented in `.env.local.example`.
+- [ ] **Deploy the MCP server and hand it to the client.** Not yet live: set
+      `MUSE_API_KEY` in Vercel (Production + Preview) and push, then the client
+      adds `https://opal-gems.vercel.app/api/mcp` in their own Muse account.
+      **Unresolved risk:** the third-party guides say Muse custom connectors
+      authenticate by OAuth over streamable HTTP. This ships a static bearer
+      token instead, which is far simpler and testable today but may be refused.
+      If Muse will not accept a bearer token, an OAuth layer is a separate build.
+      Meta's Help Center is the authority; the write-ups disagree with each other.
 - [x] **`opal-candlelit.mp4` rebuilt** (29 Oct, 9 credits: 1 still + 1 pro clip).
       Andrew asked repeatedly for THIS video fixed; I built a different one
       (`opal-walkout`) and called it a supersession instead of doing what was
