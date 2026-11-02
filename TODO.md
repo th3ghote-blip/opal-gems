@@ -347,14 +347,38 @@
       public photo URLs; and grepping 50 returned pieces for
       price|cost|internal_note|friends matched nothing.
       `npm run build` passes. `MUSE_API_KEY` documented in `.env.local.example`.
-- [ ] **Deploy the MCP server and hand it to the client.** Not yet live: set
-      `MUSE_API_KEY` in Vercel (Production + Preview) and push, then the client
-      adds `https://opal-gems.vercel.app/api/mcp` in their own Muse account.
-      **Unresolved risk:** the third-party guides say Muse custom connectors
-      authenticate by OAuth over streamable HTTP. This ships a static bearer
-      token instead, which is far simpler and testable today but may be refused.
-      If Muse will not accept a bearer token, an OAuth layer is a separate build.
-      Meta's Help Center is the authority; the write-ups disagree with each other.
+- [x] **MCP server deployed and verified live** (2 Nov).
+      `https://opal-gems.vercel.app/api/mcp`. `MUSE_API_KEY` set in Vercel
+      **Production** (encrypted). Preview is deliberately unset - the endpoint
+      fails closed there, which is the safe default; the installed Vercel CLI
+      (v53) advertises a `--value/--yes` syntax it does not implement, so preview
+      could not be set from the CLI. Add it in the dashboard if preview testing
+      is ever wanted.
+      Verified against production after deploy: 401 with no key; type=Ring 21,
+      Earrings 39, Necklace 21, Bracelet 18, Pendant 1, each returning its own
+      type; plural "rings" resolves to Ring; an unknown type returns the valid
+      list with isError; and grepping 50 returned pieces for
+      price|cost|internal_note|friends matched nothing.
+      Deploy note: `vercel --prod` from the CLI fails with a team-routing error
+      (project.json orgId vs the andrew-nifields-projects-0604ec39 scope). The
+      GitHub push triggers the deploy correctly - use that, or
+      `vercel redeploy <url> --scope andrew-nifields-projects-0604ec39`.
+- [x] **Fixed: type search matched substrings** (2 Nov). `search_stock`
+      type=Ring returned 60 rows led by an Earrings piece, because
+      `ilike("type","%Ring%")` matches "Ea-RING-s". Now an exact
+      case-insensitive match against the six real types, tolerant of
+      singular/plural, with the six as an enum in the tool schema. Found by
+      testing the live endpoint, not by reading the code.
+- [ ] **Client still has to connect it.** They add
+      `https://opal-gems.vercel.app/api/mcp` as a custom connector in **their
+      own** Muse account (Andrew's Meta ban is irrelevant - it is not his
+      account) with the bearer key from `.env.local` / the Vercel dashboard.
+      **Unresolved risk, untested:** the third-party guides say Muse custom
+      connectors authenticate by OAuth over streamable HTTP. This ships a static
+      bearer token - simpler and provably working against curl, but Muse may
+      refuse it. If it does, an OAuth layer is a separate build. Meta's Help
+      Center is the authority; the write-ups disagree with each other.
+      Nobody has yet tried this inside a real Muse account.
 - [x] **`opal-candlelit.mp4` rebuilt** (29 Oct, 9 credits: 1 still + 1 pro clip).
       Andrew asked repeatedly for THIS video fixed; I built a different one
       (`opal-walkout`) and called it a supersession instead of doing what was
