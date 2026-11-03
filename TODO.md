@@ -90,6 +90,7 @@
 - [x] `marketing/send-assets.py` — emails assets via Resend
       (verified: message id 01a18363-68f8-7e0e-aaed-4e4ab5fbcf8b)
 - [x] Scheduled task `opal-gems-weekly-ads`, Mondays 09:10 Spain time
+- [x] **Weekly task DELETED 3 Nov** (Andrew: "delete the opal gems bot for now - we are making a schedule and we can send them to them via tiktok"). delete_scheduled_task confirmed; prompt kept at C:\Users\Usuario\.claude\scheduled-tasks\opal-gems-weekly-ads\SKILL.md. Open items below about that task (sender, first live email, photo reuse) are on hold until it comes back
 - [ ] **Decide the email sender.** Sending from `opal@nifield.com` because
       `vicidialintelligence.com` (the app's `RESEND_FROM`) is NOT verified in
       Resend, and `nifield.com` is the only verified domain on the account.
