@@ -389,6 +389,22 @@
       (`foypszldhyslqknpjilc`), so future migrations also need pasting by hand.
       To read it:
       `select at, tool, arguments, result_count, ip from mcp_access_log order by at desc limit 50;`
+- [x] **Retail prices and price filters exposed** (4 Nov, on Andrew's
+      instruction). `search_stock` and `get_piece` now return `price`
+      (sale_price), `original_price` and `currency: USD`, plus `min_price` /
+      `max_price` filters. Verified live: SKU 495223 returns
+      price 2750 / original_price 2750 / USD; `max_price:1500` narrows 104
+      pieces to 14, cheapest returned 600 and 1400.
+      **`cost` deliberately still withheld** - it is the shop's buy price and
+      the RLS migration revokes it from authenticated and anon at column level.
+      Grep of 50 returned pieces for "cost"|internal_note|friends: no matches.
+      Andrew asked for "prices"; retail was the defensible reading, and cost is
+      a separate decision if he wants it.
+- [x] **API key verified working on production** (4 Nov). No key 401, wrong key
+      401, `x-api-key` header 200, `Authorization: Bearer` 200 with full
+      payload. Every call lands in `mcp_access_log` - confirmed rows for
+      search_stock with both the type filter (n=21) and the price filter
+      (n=14, args logged).
 - [ ] **Client still has to connect it.** They add
       `https://opal-gems.vercel.app/api/mcp` as a custom connector in **their
       own** Muse account (Andrew's Meta ban is irrelevant - it is not his
