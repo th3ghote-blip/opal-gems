@@ -380,12 +380,15 @@
       Logging can never break a response - the insert is wrapped and swallowed.
       Verified locally with the table still absent: tools/list 200,
       search_stock returns 21 rings, initialize returns the protocol. Build passes.
-- [ ] **Run the `mcp_access_log` migration.** Andrew has to paste it; neither
-      Supabase management token in this workspace reaches the opal-gems project
-      (`foypszldhyslqknpjilc`) - `SUPABASE_GSI_TOKEN` and ai-secretary's
-      `SUPABASE_TOKEN` both list three other projects. SQL is in
-      `supabase/migrations/20261104180000_mcp_access_log.sql`. Until it runs,
-      the endpoint works but records nothing.
+- [x] **`mcp_access_log` migration run and logging verified on production**
+      (4 Nov, Andrew ran the SQL). All four paths confirmed writing real rows:
+      `search_stock` ok n=1 args {"type":"Pendant","limit":1};
+      `list_shops` ok n=5; `_initialize` ok capturing clientInfo
+      {"name":"verification-probe"}; `_unauthorized` ok=false "bad or missing
+      key". Neither Supabase management token here reaches this project
+      (`foypszldhyslqknpjilc`), so future migrations also need pasting by hand.
+      To read it:
+      `select at, tool, arguments, result_count, ip from mcp_access_log order by at desc limit 50;`
 - [ ] **Client still has to connect it.** They add
       `https://opal-gems.vercel.app/api/mcp` as a custom connector in **their
       own** Muse account (Andrew's Meta ban is irrelevant - it is not his
@@ -396,6 +399,10 @@
       refuse it. If it does, an OAuth layer is a separate build. Meta's Help
       Center is the authority; the write-ups disagree with each other.
       Nobody has yet tried this inside a real Muse account.
+      **This is now observable**: when Muse connects, an `_initialize` row
+      appears in `mcp_access_log` carrying Muse's own clientInfo and a
+      timestamp. An empty table means nobody has connected - which, before the
+      log existed, could not be distinguished from "we cannot see".
 - [x] **`opal-candlelit.mp4` rebuilt** (29 Oct, 9 credits: 1 still + 1 pro clip).
       Andrew asked repeatedly for THIS video fixed; I built a different one
       (`opal-walkout`) and called it a supersession instead of doing what was
