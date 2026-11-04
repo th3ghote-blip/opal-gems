@@ -238,6 +238,40 @@ async function callTool(name: string, args: Record<string, unknown>) {
   }
 }
 
+// Audit trail. Vercel does not retain runtime logs for this project, so without
+// this there is no record of who read the client's stock. Never allowed to break
+// a response: a logging failure is swallowed.
+async function logAccess(
+  req: NextRequest,
+  tool: string,
+  args: Record<string, unknown> | null,
+  outcome: { ok: boolean; count?: number | null; error?: string }
+) {
+  try {
+    const admin = createAdminClient();
+    await admin.from("mcp_access_log").insert({
+      tool,
+      arguments: args,
+      result_count: outcome.count ?? null,
+      ok: outcome.ok,
+      error: outcome.error ?? null,
+      ip: req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null,
+      user_agent: req.headers.get("user-agent")?.slice(0, 300) ?? null,
+    });
+  } catch {
+    // Table missing or DB down — serving the request still matters more.
+  }
+}
+
+// How many rows a tool result represents, for the log only.
+function countOf(tool: string, result: unknown): number | null {
+  const r = result as Record<string, unknown>;
+  if (tool === "search_stock") return typeof r.count === "number" ? r.count : null;
+  if (tool === "get_piece") return r.found === true ? 1 : 0;
+  if (tool === "list_shops") return Array.isArray(r.shops) ? r.shops.length : null;
+  return null;
+}
+
 function rpcError(id: unknown, code: number, message: string, status = 200) {
   return NextResponse.json({ jsonrpc: "2.0", id: id ?? null, error: { code, message } }, { status });
 }
@@ -254,6 +288,9 @@ function authorized(req: NextRequest): boolean {
 
 export async function POST(req: NextRequest) {
   if (!authorized(req)) {
+    // Logged on purpose: a run of these means the endpoint URL is being probed,
+    // or the key has leaked and is being guessed at.
+    await logAccess(req, "_unauthorized", null, { ok: false, error: "bad or missing key" });
     return NextResponse.json(
       { jsonrpc: "2.0", id: null, error: { code: -32001, message: "Unauthorized" } },
       { status: 401 }
@@ -280,6 +317,9 @@ export async function POST(req: NextRequest) {
 
   try {
     if (method === "initialize") {
+      // The row that answers "has anyone actually connected this?"
+      const client = (params?.clientInfo as Record<string, unknown>) ?? null;
+      await logAccess(req, "_initialize", client, { ok: true });
       return NextResponse.json({
         jsonrpc: "2.0",
         id,
@@ -312,7 +352,11 @@ export async function POST(req: NextRequest) {
       const toolName = typeof params?.name === "string" ? params.name : "";
       const args = (params?.arguments as Record<string, unknown>) ?? {};
       const result = await callTool(toolName, args);
-      if (result === null) return rpcError(id, -32602, `Unknown tool: ${toolName}`);
+      if (result === null) {
+        await logAccess(req, toolName || "_unknown", args, { ok: false, error: "unknown tool" });
+        return rpcError(id, -32602, `Unknown tool: ${toolName}`);
+      }
+      await logAccess(req, toolName, args, { ok: true, count: countOf(toolName, result) });
       return NextResponse.json({
         jsonrpc: "2.0",
         id,
@@ -327,6 +371,11 @@ export async function POST(req: NextRequest) {
     // Tool failures come back as an MCP tool error, not a transport error, so
     // the agent can read what went wrong instead of just seeing a dead call.
     if (method === "tools/call") {
+      const failedTool = typeof params?.name === "string" ? params.name : "_unknown";
+      await logAccess(req, failedTool, (params?.arguments as Record<string, unknown>) ?? null, {
+        ok: false,
+        error: message,
+      });
       return NextResponse.json({
         jsonrpc: "2.0",
         id,

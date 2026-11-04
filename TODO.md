@@ -370,6 +370,22 @@
       case-insensitive match against the six real types, tolerant of
       singular/plural, with the six as an enum in the tool schema. Found by
       testing the live endpoint, not by reading the code.
+- [x] **Audit log for the MCP endpoint — code built** (4 Nov).
+      Vercel retains no runtime logs for this project: a probe POST at 18:34:24Z
+      returned 200 and the logs for that window were empty, so there was no
+      record of who read the client's stock. `/api/mcp` now writes one row per
+      call to `mcp_access_log`: tool, arguments, result count, ok/error, IP and
+      user agent. `_initialize` rows are the ones that answer "has anyone
+      actually connected"; `_unauthorized` rows are the leak signal.
+      Logging can never break a response - the insert is wrapped and swallowed.
+      Verified locally with the table still absent: tools/list 200,
+      search_stock returns 21 rings, initialize returns the protocol. Build passes.
+- [ ] **Run the `mcp_access_log` migration.** Andrew has to paste it; neither
+      Supabase management token in this workspace reaches the opal-gems project
+      (`foypszldhyslqknpjilc`) - `SUPABASE_GSI_TOKEN` and ai-secretary's
+      `SUPABASE_TOKEN` both list three other projects. SQL is in
+      `supabase/migrations/20261104180000_mcp_access_log.sql`. Until it runs,
+      the endpoint works but records nothing.
 - [ ] **Client still has to connect it.** They add
       `https://opal-gems.vercel.app/api/mcp` as a custom connector in **their
       own** Muse account (Andrew's Meta ban is irrelevant - it is not his
