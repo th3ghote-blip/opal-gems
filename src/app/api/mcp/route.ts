@@ -8,10 +8,14 @@ export const dynamic = "force-dynamic";
 // Transport: JSON-RPC 2.0 over HTTP POST (MCP streamable HTTP). No SSE stream —
 // this server never initiates messages, so GET is refused.
 //
-// WHAT NEVER LEAVES HERE: cost, original_price, sale_price, internal_notes, and
-// anything in the "Friends & Family" virtual shop. Pricing is withheld on
-// purpose — the same call the receptionist endpoint made. Widening that is a
-// decision for the shop owner, not a code change to make quietly.
+// WHAT NEVER LEAVES HERE: `cost` (what the shop paid — their margin; revoked
+// from authenticated and anon at the column level in the RLS migration),
+// `internal_notes`, and anything in the "Friends & Family" virtual shop.
+//
+// Retail pricing IS exposed — original_price and sale_price, in USD — on
+// Andrew's instruction (4 Nov). Cost deliberately stays out: showing a customer
+// the tag price and handing an outside agent the buy price are different
+// decisions, and only the first one was asked for.
 
 const PROTOCOL_VERSION = "2025-06-18";
 const SERVER_NAME = "opal-gems-stock";
@@ -37,11 +41,14 @@ function normaliseType(input: string): string | null {
   return null;
 }
 
-// Columns safe to expose. Pricing and cost columns are deliberately absent.
+// Columns safe to expose. `cost` and `internal_notes` are deliberately absent.
 const PIECE_COLUMNS =
   "sku, type, metal, karat, main_stone, stone_cut, clarity, color_grade, " +
   "ctw, gram_weight, length_in, width_mm, ring_size, description, quantity, " +
+  "original_price, sale_price, " +
   "shops!current_shop_id(name), piece_photos(storage_path, sort_order)";
+
+const CURRENCY = "USD"; // matches src/lib/format.ts
 
 type RawPiece = {
   sku: string;
@@ -59,6 +66,8 @@ type RawPiece = {
   ring_size: number | null;
   description: string | null;
   quantity: number;
+  original_price: number | null;
+  sale_price: number | null;
   shops: { name: string } | null;
   piece_photos: { storage_path: string; sort_order: number }[] | null;
 };
@@ -78,6 +87,9 @@ function shape(p: RawPiece) {
     type: p.type,
     shop: p.shops?.name ?? null,
     quantity: p.quantity,
+    price: p.sale_price,              // what the customer pays today
+    original_price: p.original_price, // list price before the standard markdown
+    currency: CURRENCY,
     photos: photoUrls(p),
   };
   // Only include measured/graded fields that are actually set, so the agent
@@ -105,8 +117,8 @@ const TOOLS = [
     name: "search_stock",
     description:
       "Search Opal Gems pieces that are currently in stock. Filters are optional and combine with AND. " +
-      "Returns SKU, type, metal, stone details, carat weight, quantity, which boutique holds it, and public photo URLs. " +
-      "Prices are not available through this tool.",
+      "Returns SKU, type, metal, stone details, carat weight, quantity in stock, price and original_price " +
+      "(USD), which boutique holds it, and public photo URLs.",
     inputSchema: {
       type: "object",
       properties: {
@@ -120,6 +132,8 @@ const TOOLS = [
         shop: { type: "string", description: "Boutique name. Partial match." },
         min_ctw: { type: "number", description: "Minimum carat total weight." },
         max_ctw: { type: "number", description: "Maximum carat total weight." },
+        min_price: { type: "number", description: "Minimum current price in USD." },
+        max_price: { type: "number", description: "Maximum current price in USD." },
         limit: { type: "number", description: `Max results, 1-${MAX_LIMIT}. Default 20.` },
       },
     },
@@ -127,8 +141,8 @@ const TOOLS = [
   {
     name: "get_piece",
     description:
-      "Fetch one in-stock Opal Gems piece by its exact SKU. Returns the same fields as search_stock. " +
-      "Prices are not available through this tool.",
+      "Fetch one in-stock Opal Gems piece by its exact SKU. Returns the same fields as search_stock, " +
+      "including price and quantity in stock.",
     inputSchema: {
       type: "object",
       properties: { sku: { type: "string", description: 'Exact SKU, e.g. "342666".' } },
@@ -160,6 +174,8 @@ async function searchStock(args: Record<string, unknown>) {
     q = q.ilike("main_stone", `%${args.main_stone.trim()}%`);
   if (typeof args.min_ctw === "number") q = q.gte("ctw", args.min_ctw);
   if (typeof args.max_ctw === "number") q = q.lte("ctw", args.max_ctw);
+  if (typeof args.min_price === "number") q = q.gte("sale_price", args.min_price);
+  if (typeof args.max_price === "number") q = q.lte("sale_price", args.max_price);
 
   const limit = Math.min(
     Math.max(typeof args.limit === "number" ? Math.floor(args.limit) : 20, 1),
@@ -329,9 +345,11 @@ export async function POST(req: NextRequest) {
           serverInfo: { name: SERVER_NAME, version: SERVER_VERSION },
           instructions:
             "Live stock for Opal Gems, a jewellery retailer with boutiques inside resorts. " +
-            "Use search_stock to find pieces by type, metal, stone or boutique, get_piece for one SKU, " +
-            "and list_shops for the boutiques. Prices are not exposed: for a price, tell the customer " +
-            "to contact the boutique.",
+            "Use search_stock to find pieces by type, metal, stone, price range or boutique, get_piece " +
+            "for one SKU, and list_shops for the boutiques. Prices are in USD: `price` is what the " +
+            "customer pays today and `original_price` is the list price before the standard markdown. " +
+            "`quantity` is units in stock. Every piece returned is in stock now, but stock moves — " +
+            "confirm with the boutique before promising a specific piece to a customer.",
         },
       });
     }
