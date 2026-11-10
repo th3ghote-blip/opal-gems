@@ -299,7 +299,11 @@ function authorized(req: NextRequest): boolean {
   if (!key) return false;
   const header = req.headers.get("authorization") ?? "";
   const bearer = header.toLowerCase().startsWith("bearer ") ? header.slice(7).trim() : "";
-  return bearer === key || req.headers.get("x-api-key") === key;
+  // x-api-key is trimmed too: a key pasted into a config box often carries a
+  // trailing newline or space, and an untrimmed compare turns that into a 401
+  // that looks like a wrong key.
+  const apiKeyHeader = (req.headers.get("x-api-key") ?? "").trim();
+  return bearer === key || apiKeyHeader === key;
 }
 
 export async function POST(req: NextRequest) {
