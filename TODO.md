@@ -405,20 +405,30 @@
       payload. Every call lands in `mcp_access_log` - confirmed rows for
       search_stock with both the type filter (n=21) and the price filter
       (n=14, args logged).
-- [ ] **Client reports 401; the log says no Muse has ever connected** (10 Nov).
-      Full dump of `mcp_access_log`, 42 rows since logging began 4 Nov 18:46:
-      39 from 217.61.226.198 (Claude's own curl tests, Marbella) of which 36 ok,
-      and 3 from 87.81.x.x on 10 Nov - **all 401, zero successes**, user agents
-      `curl/8.5.0` and `Python-urllib/3.12`. The only `_initialize` row in the
-      table is the verification probe.
-      Andrew says they have "one Muse working with it". That cannot be true for
-      this endpoint since 4 Nov - a working connector would be generating calls
-      and there are none. Caveat: the endpoint went live 2 Nov and logging only
-      started 4 Nov 18:46, so a connection in that window is invisible.
-      Both header forms verified 200 against production again on 10 Nov, so a
-      401 on both means the key VALUE being sent is wrong. Key is 43 chars; a
-      truncated paste fails exactly like this. Next step: compare the key in the
-      working Muse's connector config against the failing one, or rotate.
+- [x] **Client's 401 solved: wrong URL, not a wrong key** (10 Nov).
+      Andrew gave the prefix of the key they were using - `Z7cL`, 43 chars -
+      which MATCHES the key in `.env.local`, and production accepts that exact
+      value (200 today on both header forms). So the credential was never the
+      problem, and Claude's "wrong key value" diagnosis was wrong; it should
+      have compared prefixes before saying so.
+      Real cause, confirmed by testing the same correct key against four hosts:
+        opal-gems-ev5bjt6x3-….vercel.app   401
+        opal-gems-krj9wvb0w-….vercel.app   401
+        opal-gems-oxgfk96fh-….vercel.app   401
+        opal-gems.vercel.app               200
+      `MUSE_API_KEY` is bound to **Production only** - set that way deliberately
+      on 4 Nov, with the note that preview "fails closed, which is safe". It is
+      safe, and it is also precisely what caused this: any deployment-specific
+      or preview URL rejects a perfectly good key.
+      **Only `https://opal-gems.vercel.app/api/mcp` works.** If a connector was
+      created against any other host it must be deleted and re-added.
+- [ ] **Consider setting `MUSE_API_KEY` on Preview too**, so a non-production
+      URL gives a useful error rather than a 401 that looks like a bad
+      credential. The installed Vercel CLI (v53) advertises a `--value/--yes`
+      syntax it does not implement, so this needs doing in the dashboard.
+      Note preview URLs may also sit behind Vercel deployment protection, so
+      the env var alone may not make them work - the production alias is the
+      supported endpoint either way.
 - [x] **x-api-key header now trimmed** (10 Nov, `10f1527`). The bearer path
       already trimmed; x-api-key did not, so a key pasted with a trailing
       newline 401'd exactly like a wrong key. Robustness fix, not a confirmed
