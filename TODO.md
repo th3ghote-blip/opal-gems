@@ -405,31 +405,26 @@
       payload. Every call lands in `mcp_access_log` - confirmed rows for
       search_stock with both the type filter (n=21) and the price filter
       (n=14, args logged).
-- [ ] **Client 401 UNSOLVED - two wrong diagnoses so far** (10 Nov).
-      What is ruled out, with evidence:
-      * **Not the key value.** Andrew gave the prefix `Z7cL`, 43 chars; it
-        matches `.env.local`, and production returns 200 for that exact value.
-      * **Not the URL.** Andrew's screenshot shows them using
-        `https://opal-gems.vercel.app/api/mcp`, which is correct. (An earlier
-        entry here claimed the URL was the cause - it was not, and that entry
-        is replaced. Deployment-specific URLs do 401, but they are not using one.)
-      * **Not the headers.** Both `Authorization: Bearer` and `x-api-key`
-        return 200 on production, re-verified 10 Nov.
-      Timing worth keeping: their attempts were 15:37/15:42/15:44 UTC and the
-      `x-api-key` trim only deployed at 16:48, so that fix was NOT live for
-      them. If Muse sends `x-api-key` with a trailing newline, a retry now may
-      simply work.
-      **Instrumentation deployed** (`7fd4b85`) rather than guessing a third
-      time: a 401 now logs the shape of what arrived - which header, the
-      scheme, received vs expected length, and 8-hex SHA-256 prefixes of each.
-      Verified live with a deliberately wrong key: expected_length 43,
-      expected_sha256_8 `024f7774`, received 18 / `490cc972`.
-      **Next step: the client retries, then read**
-      `select at, arguments, ip, user_agent from mcp_access_log
-       where tool = '_unauthorized' order by at desc limit 5;`
-      Equal sha prefixes mean the credential is right and the fault is
-      elsewhere; different prefixes mean it is not.
-      Remove the diagnostics once the connection works.
+- [x] **Client 401 SOLVED: they were sending `MUSE_API_KEY=<key>`, not the
+      value** (10 Nov). Proven, not guessed. The diagnostics deployed in
+      `7fd4b85` captured their retry at 15:58:26 from 87.81.232.102
+      (Python-urllib/3.12): received_length 56 against expected 43, and
+      received_sha256_8 `3d13e9ec` against expected `024f7774`. 56 - 43 = 13,
+      which is exactly the length of the string `MUSE_API_KEY=`. Hashing
+      `"MUSE_API_KEY=" + key` gives `3d13e9ec` - an exact match, where the key
+      alone gives `024f7774`. Their own first message asked "is it the
+      MUSE_API_KEY", which was the clue.
+      The row also shows they used `x-api-key` with NO Authorization header, so
+      the Bearer form they reported trying was never actually sent.
+      Two wrong diagnoses preceded this - the key value, then the URL - both
+      from reasoning instead of instrumenting. Instrumenting took one retry.
+- [ ] **Remove the temporary 401 diagnostics** (`authDiagnostics` in
+      `src/app/api/mcp/route.ts`, added `7fd4b85`) once the client confirms the
+      connection works. They store no secret, only lengths and SHA-256
+      prefixes, so there is no urgency - but they are debug scaffolding.
+- [ ] **Confirm the connection actually completes.** Still no `_initialize` row
+      from Muse. When one appears carrying Meta's clientInfo, the integration
+      is genuinely done; until then it is diagnosed, not proven.
 - [ ] **Consider setting `MUSE_API_KEY` on Preview too**, so a non-production
       URL gives a useful error rather than a 401 that looks like a bad
       credential. The installed Vercel CLI (v53) advertises a `--value/--yes`
