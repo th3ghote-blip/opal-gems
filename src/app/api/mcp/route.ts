@@ -292,6 +292,41 @@ function rpcError(id: unknown, code: number, message: string, status = 200) {
   return NextResponse.json({ jsonrpc: "2.0", id: id ?? null, error: { code, message } }, { status });
 }
 
+// TEMPORARY (added 10 Nov) — diagnostics for a client whose correct key and
+// correct URL still 401. Records the SHAPE of what arrived, never the secret:
+// which header carried it, how long it was, and an 8-hex-char SHA-256 prefix of
+// the received vs expected value. Equal prefixes prove the credential matched;
+// different ones prove it did not. Remove once the connection is working.
+async function authDiagnostics(req: NextRequest): Promise<Record<string, unknown>> {
+  const expected = process.env.MUSE_API_KEY ?? "";
+  const authHeader = req.headers.get("authorization");
+  const apiKeyHeader = req.headers.get("x-api-key");
+
+  const presented = authHeader?.toLowerCase().startsWith("bearer ")
+    ? authHeader.slice(7).trim()
+    : (apiKeyHeader ?? "").trim();
+
+  const sha8 = async (s: string) => {
+    if (!s) return null;
+    const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+    return Array.from(new Uint8Array(buf))
+      .slice(0, 4)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+  };
+
+  return {
+    authorization_header_present: authHeader !== null,
+    authorization_scheme: authHeader ? authHeader.split(" ")[0] : null,
+    x_api_key_header_present: apiKeyHeader !== null,
+    received_length: presented.length,
+    expected_length: expected.length,
+    received_sha256_8: await sha8(presented),
+    expected_sha256_8: await sha8(expected),
+    expected_key_configured: expected.length > 0,
+  };
+}
+
 function authorized(req: NextRequest): boolean {
   const key = process.env.MUSE_API_KEY;
   // Fail closed. This serves a client's live commercial stock; an unset key
@@ -310,7 +345,10 @@ export async function POST(req: NextRequest) {
   if (!authorized(req)) {
     // Logged on purpose: a run of these means the endpoint URL is being probed,
     // or the key has leaked and is being guessed at.
-    await logAccess(req, "_unauthorized", null, { ok: false, error: "bad or missing key" });
+    await logAccess(req, "_unauthorized", await authDiagnostics(req), {
+      ok: false,
+      error: "bad or missing key",
+    });
     return NextResponse.json(
       { jsonrpc: "2.0", id: null, error: { code: -32001, message: "Unauthorized" } },
       { status: 401 }
