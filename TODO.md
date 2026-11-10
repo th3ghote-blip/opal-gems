@@ -405,6 +405,24 @@
       payload. Every call lands in `mcp_access_log` - confirmed rows for
       search_stock with both the type filter (n=21) and the price filter
       (n=14, args logged).
+- [ ] **Client reports 401; the log says no Muse has ever connected** (10 Nov).
+      Full dump of `mcp_access_log`, 42 rows since logging began 4 Nov 18:46:
+      39 from 217.61.226.198 (Claude's own curl tests, Marbella) of which 36 ok,
+      and 3 from 87.81.x.x on 10 Nov - **all 401, zero successes**, user agents
+      `curl/8.5.0` and `Python-urllib/3.12`. The only `_initialize` row in the
+      table is the verification probe.
+      Andrew says they have "one Muse working with it". That cannot be true for
+      this endpoint since 4 Nov - a working connector would be generating calls
+      and there are none. Caveat: the endpoint went live 2 Nov and logging only
+      started 4 Nov 18:46, so a connection in that window is invisible.
+      Both header forms verified 200 against production again on 10 Nov, so a
+      401 on both means the key VALUE being sent is wrong. Key is 43 chars; a
+      truncated paste fails exactly like this. Next step: compare the key in the
+      working Muse's connector config against the failing one, or rotate.
+- [x] **x-api-key header now trimmed** (10 Nov, `10f1527`). The bearer path
+      already trimmed; x-api-key did not, so a key pasted with a trailing
+      newline 401'd exactly like a wrong key. Robustness fix, not a confirmed
+      diagnosis of the client's failure.
 - [ ] **Client still has to connect it.** They add
       `https://opal-gems.vercel.app/api/mcp` as a custom connector in **their
       own** Muse account (Andrew's Meta ban is irrelevant - it is not his
