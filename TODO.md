@@ -405,23 +405,31 @@
       payload. Every call lands in `mcp_access_log` - confirmed rows for
       search_stock with both the type filter (n=21) and the price filter
       (n=14, args logged).
-- [x] **Client's 401 solved: wrong URL, not a wrong key** (10 Nov).
-      Andrew gave the prefix of the key they were using - `Z7cL`, 43 chars -
-      which MATCHES the key in `.env.local`, and production accepts that exact
-      value (200 today on both header forms). So the credential was never the
-      problem, and Claude's "wrong key value" diagnosis was wrong; it should
-      have compared prefixes before saying so.
-      Real cause, confirmed by testing the same correct key against four hosts:
-        opal-gems-ev5bjt6x3-….vercel.app   401
-        opal-gems-krj9wvb0w-….vercel.app   401
-        opal-gems-oxgfk96fh-….vercel.app   401
-        opal-gems.vercel.app               200
-      `MUSE_API_KEY` is bound to **Production only** - set that way deliberately
-      on 4 Nov, with the note that preview "fails closed, which is safe". It is
-      safe, and it is also precisely what caused this: any deployment-specific
-      or preview URL rejects a perfectly good key.
-      **Only `https://opal-gems.vercel.app/api/mcp` works.** If a connector was
-      created against any other host it must be deleted and re-added.
+- [ ] **Client 401 UNSOLVED - two wrong diagnoses so far** (10 Nov).
+      What is ruled out, with evidence:
+      * **Not the key value.** Andrew gave the prefix `Z7cL`, 43 chars; it
+        matches `.env.local`, and production returns 200 for that exact value.
+      * **Not the URL.** Andrew's screenshot shows them using
+        `https://opal-gems.vercel.app/api/mcp`, which is correct. (An earlier
+        entry here claimed the URL was the cause - it was not, and that entry
+        is replaced. Deployment-specific URLs do 401, but they are not using one.)
+      * **Not the headers.** Both `Authorization: Bearer` and `x-api-key`
+        return 200 on production, re-verified 10 Nov.
+      Timing worth keeping: their attempts were 15:37/15:42/15:44 UTC and the
+      `x-api-key` trim only deployed at 16:48, so that fix was NOT live for
+      them. If Muse sends `x-api-key` with a trailing newline, a retry now may
+      simply work.
+      **Instrumentation deployed** (`7fd4b85`) rather than guessing a third
+      time: a 401 now logs the shape of what arrived - which header, the
+      scheme, received vs expected length, and 8-hex SHA-256 prefixes of each.
+      Verified live with a deliberately wrong key: expected_length 43,
+      expected_sha256_8 `024f7774`, received 18 / `490cc972`.
+      **Next step: the client retries, then read**
+      `select at, arguments, ip, user_agent from mcp_access_log
+       where tool = '_unauthorized' order by at desc limit 5;`
+      Equal sha prefixes mean the credential is right and the fault is
+      elsewhere; different prefixes mean it is not.
+      Remove the diagnostics once the connection works.
 - [ ] **Consider setting `MUSE_API_KEY` on Preview too**, so a non-production
       URL gives a useful error rather than a 401 that looks like a bad
       credential. The installed Vercel CLI (v53) advertises a `--value/--yes`
