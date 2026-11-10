@@ -422,9 +422,21 @@
       `src/app/api/mcp/route.ts`, added `7fd4b85`) once the client confirms the
       connection works. They store no secret, only lengths and SHA-256
       prefixes, so there is no urgency - but they are debug scaffolding.
-- [ ] **Confirm the connection actually completes.** Still no `_initialize` row
-      from Muse. When one appears carrying Meta's clientInfo, the integration
-      is genuinely done; until then it is diagnosed, not proven.
+- [x] **Muse is connected and pulling data** (10 Nov 15:59, proven in
+      `mcp_access_log`). 47 seconds after the last 401, `_initialize` arrived
+      carrying `{"name":"muse-custom-connector","version":"1"}`, then
+      `list_shops` (5) and a `search_stock` per boutique:
+      Clearwater Beach 28, Jupiter 1 8, Jupiter 2 11, Olde Naples Hotel 11,
+      Opal Grande 46 - **all 104 in-stock pieces, with prices, in 27 seconds**.
+      **The OAuth risk did not materialise.** Muse accepted a static bearer /
+      x-api-key token for a custom connector. That had been the main open
+      unknown since the build started, flagged repeatedly as untested; it is
+      now settled in our favour and needs no OAuth layer.
+      Oddity, harmless: seven `_initialize` calls in 26 seconds - the connector
+      re-handshakes per call instead of holding a session.
+      Worth the client knowing: an agent that connects pulls the whole
+      catalogue at once. The full inventory including prices now sits in Meta's
+      context, not only the pieces a customer asks about.
 - [ ] **Consider setting `MUSE_API_KEY` on Preview too**, so a non-production
       URL gives a useful error rather than a 401 that looks like a bad
       credential. The installed Vercel CLI (v53) advertises a `--value/--yes`
